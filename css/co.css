@@ -3250,8 +3250,8 @@ co-toggle-switch[checked] thumb {
 #interface #ui-right-column-1 .chat-message .message-content .vs label {
   font-size: var(--font-size-18);
 }
-#interface #sidebar .chat-message .message-content .display-difficulty,
-#interface #ui-right-column-1 .chat-message .message-content .display-difficulty,
+#interface #sidebar .chat-message .message-content .difficulty-label,
+#interface #ui-right-column-1 .chat-message .message-content .difficulty-label,
 #interface #sidebar .chat-message .message-content .dice-total,
 #interface #ui-right-column-1 .chat-message .message-content .dice-total {
   margin-bottom: -10px;
@@ -3384,6 +3384,17 @@ co-toggle-switch[checked] thumb {
   color: #5d142b;
   border: 2px solid #5d142b;
   box-shadow: 1px 1px 0px 1px #5d142b;
+}
+#interface #sidebar .chat-message .message-content .type-card-attack,
+#interface #ui-right-column-1 .chat-message .message-content .type-card-attack,
+#interface #sidebar .chat-message .message-content .type-card-damage,
+#interface #ui-right-column-1 .chat-message .message-content .type-card-damage,
+#interface #sidebar .chat-message .message-content .type-card-skill,
+#interface #ui-right-column-1 .chat-message .message-content .type-card-skill {
+  overflow: hidden;
+  overflow-wrap: break-word;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .theme-dark #interface #sidebar .chat-message .message-content .type-card-attack,
 .theme-dark #interface #ui-right-column-1 .chat-message .message-content .type-card-attack,

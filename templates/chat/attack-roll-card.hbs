@@ -1,10 +1,8 @@
 {{!log "Chroniques Oubliées | hbs | attack-roll-card" this}}
 <div class="co chat-card roll-card attack-card" data-actor-id="{{speaker.actor}}">
-  <header class="card-header flexcol">
-    {{#if (eq type "attack")}}<div class="type-card-attack"><label><i class="fa-solid fa-swords"></i> {{localize "CO.label.long.attack"}}</label></div>{{/if}} 
-    {{#if (eq type "damage")}}<div class="type-card-damage"><label><i class="fa-solid fa-droplet"></i> {{localize "CO.label.long.damage"}}</label></div>{{/if}} 
-    <div class="action-name"><strong>{{flavor}}</strong></div>
-    
+  <header class="card-header flexcol" data-tooltip="{{flavor}}">
+    {{#if (eq type "attack")}}<div class="type-card-attack "><label><i class="fa-solid fa-swords"></i> {{flavor}}</label></div>{{/if}} 
+    {{#if (eq type "damage")}}<div class="type-card-damage"><label><i class="fa-solid fa-droplet"></i> {{flavor}}</label></div>{{/if}} 
   </header>
 
   <div class="card-content">   
@@ -26,14 +24,14 @@
       {{#if showDifficulty}}
         {{#if (eq difficulty "")}}
         {{else}}
-          <div class="vs"><label>VS</label></div>
-          <div class="form-group diff-result">
-            <div class="display-difficulty"><label>{{localize "CO.label.long.difficulty"}}</label></div>        
-            {{#if oppositeRoll}}
-              <div><i class="fa-solid fa-square-question"></i></div>
-            {{else}}
-              <div>{{difficulty}}</div>
-            {{/if}}
+          <div class="display-difficulty vs"><label>VS</label></div>
+          <div class="form-group diff-result display-difficulty">
+            <div class="difficulty-label"><label>{{localize "CO.label.long.difficulty"}}</label></div>        
+              {{#if oppositeRoll}}
+                <div><i class="fa-solid fa-square-question"></i></div>
+              {{else}}
+                <div>{{difficulty}}</div>
+              {{/if}}
           </div>
         {{/if}}      
       {{/if}}
@@ -79,34 +77,34 @@
     {{#if (eq type "attack")}}
       <section class="result-sentence">
         {{#if oppositeRoll}}
-              <button class="opposite-roll" data-opposite-value="{{difficulty}}" data-opposite-target="{{oppositeTarget}}">{{localize "CO.ui.oppositeRoll"}}</button>
-            {{else}}
-        {{#if showDifficulty}}
-            {{#if isSuccess}}
-              {{#if isCritical}}
-                <div class="success critical"><i class="fas fa-check-double"></i><br>{{localize "CO.roll.critical"}}</div>
+            <button class="opposite-roll" data-opposite-value="{{difficulty}}" data-opposite-target="{{oppositeTarget}}">{{localize "CO.ui.oppositeRoll"}}</button>
+        {{else}}
+          {{#if showDifficulty}}
+              {{#if isSuccess}}
+                {{#if isCritical}}
+                  <div class="success critical"><i class="fas fa-check-double"></i><br>{{localize "CO.roll.critical"}}</div>
+                {{else}}
+                  <div class="success"><i class="fas fa-check"></i><br>{{localize "CO.roll.success"}}</div>
+                {{/if}}
               {{else}}
-                <div class="success"><i class="fas fa-check"></i><br>{{localize "CO.roll.success"}}</div>
+                {{#if isFailure}}
+                  {{#if isFumble}}
+                    <div class="failure fumble"><i class="fas fa-skull-crossbones"></i><br>{{localize "CO.roll.fumble"}}</div>
+                  {{else}}
+                    <div class="failure"><i class="fas fa-times"></i><br>{{localize "CO.roll.failure"}}</div>
+                  {{/if}}
+                {{/if}}
               {{/if}}
-            {{/if}}
-            {{#if isFailure}}
+              <!--{{#if isCritical}}
+                <div class="standard critical"><i class="fas fa-check-double"></i><br>{{localize "CO.roll.critical"}}</div>
+              {{/if}}
               {{#if isFumble}}
                 <div class="failure fumble"><i class="fas fa-skull-crossbones"></i><br>{{localize "CO.roll.fumble"}}</div>
-              {{else}}
-                <div class="failure"><i class="fas fa-times"></i><br>{{localize "CO.roll.failure"}}</div>
-              {{/if}}
-            {{/if}}
-          {{else}}
-            {{#if isCritical}}
-              <div class="standard critical"><i class="fas fa-check-double"></i><br>{{localize "CO.roll.critical"}}</div>
-            {{/if}}
-            {{#if isFumble}}
-              <div class="failure fumble"><i class="fas fa-skull-crossbones"></i><br>{{localize "CO.roll.fumble"}}</div>
-            {{/if}}
-          {{/if}}      
-        {{/if}} 
-      {{/if}}    
+              {{/if}}-->
+          {{/if}} 
+        {{/if}}    
       </section>
+    {{/if}} 
   </div>
 
   {{#if (eq type "attack")}}

@@ -121,7 +121,7 @@
         font-size: var(--font-size-18);
       }
     }
-    .display-difficulty,
+    .difficulty-label,
     .dice-total {
       margin-bottom: -10px;
     }
@@ -246,6 +246,10 @@
     .type-card-attack,
     .type-card-damage,
     .type-card-skill {
+      overflow: hidden;
+      overflow-wrap: break-word;
+      white-space: nowrap;
+      text-overflow: ellipsis;
       .theme-dark & {
         text-shadow: 0px 0px 4px #795403;
       }
