@@ -30,7 +30,7 @@
           <div class="form-group diff-result">
             <div class="display-difficulty"><label>{{localize "CO.label.long.difficulty"}}</label></div>        
             {{#if oppositeRoll}}
-              <button class="opposite-roll" data-opposite-value="{{difficulty}}" data-opposite-target="{{oppositeTarget}}">{{localize "CO.ui.oppositeRoll"}}</button>
+              <div><i class="fa-solid fa-square-question"></i></div>
             {{else}}
               <div>{{difficulty}}</div>
             {{/if}}
@@ -78,6 +78,9 @@
 
     {{#if (eq type "attack")}}
       <section class="result-sentence">
+        {{#if oppositeRoll}}
+              <button class="opposite-roll" data-opposite-value="{{difficulty}}" data-opposite-target="{{oppositeTarget}}">{{localize "CO.ui.oppositeRoll"}}</button>
+            {{else}}
         {{#if showDifficulty}}
             {{#if isSuccess}}
               {{#if isCritical}}
@@ -101,7 +104,8 @@
               <div class="failure fumble"><i class="fas fa-skull-crossbones"></i><br>{{localize "CO.roll.fumble"}}</div>
             {{/if}}
           {{/if}}      
-        {{/if}}   
+        {{/if}} 
+      {{/if}}    
       </section>
   </div>
 

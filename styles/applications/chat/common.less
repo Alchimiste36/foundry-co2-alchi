@@ -56,7 +56,6 @@
       font-size: 18px;
       font-weight: bold;
       display: inline;
-      //text-wrap: auto;
     }
     .message-sender {
       display: flex;
@@ -121,9 +120,6 @@
       label {
         font-size: var(--font-size-18);
       }
-      /*.vs {
-        flex-basis: 40px;
-      }*/
     }
     .display-difficulty,
     .dice-total {
@@ -185,6 +181,7 @@
           border: 2px solid #2c532c;
           border-radius: 10px;
           color: #2c532c;
+          box-shadow: 1px 1px 0px 1px #2c532c;
         }
         .critical {
           width: 100%;
@@ -192,6 +189,7 @@
           border: 2px solid green;
           border-radius: 10px;
           color: green;
+          box-shadow: 1px 1px 0px 1px green;
         }
         .failure {
           width: 100%;
@@ -199,6 +197,7 @@
           border: 2px solid darkred;
           border-radius: 10px;
           color: darkred;
+          box-shadow: 1px 1px 0px 1px darkred;
         }
         .failure.fumble {
           width: 100%;
@@ -206,6 +205,7 @@
           border: 2px solid red;
           border-radius: 10px;
           color: red;
+          box-shadow: 1px 1px 0px 1px red;
         }
       }
     }
@@ -225,14 +225,23 @@
       }
     }
     button.opposite-roll {
-      height: 40px;
+      width: 100%;
+      padding: 3px 0px;
+
+      border-radius: 10px;
+      height: auto;
       font-size: 18px;
-      color: #910000;
       background: #5d142b3d;
-      border: 2px solid var(--color-encounterSheet);
-      border-radius: 15px;
-      box-shadow: 1px 1px 0px 1px var(--color-encounterSheet);
-      padding: 0px 5px;
+      .theme-dark & {
+        color: #ff0000;
+        border: 2px solid #ff0000;
+        box-shadow: 1px 1px 0px 1px #ff0000;
+      }
+      .theme-light & {
+        color: #5d142b;
+        border: 2px solid #5d142b;
+        box-shadow: 1px 1px 0px 1px #5d142b;
+      }
     }
     .type-card-attack,
     .type-card-damage,
@@ -257,7 +266,7 @@
     .type-card-attack {
       .theme-dark & {
         label {
-          color: #d11111;
+          color: #c54709;
         }
       }
       .theme-light & {
@@ -299,7 +308,12 @@
       grid-template-columns: repeat(4, 37px);
       grid-template-rows: 30px 30px;
       justify-items: center;
-      border-left: 4px solid var(--color-encounterSheet);
+      .theme-dark & {
+        border-left: 2px solid #ff0000;
+      }
+      .theme-light & {
+        border-left: 2px solid #5d142b;
+      }
       //padding-left: 10px;
       .fas {
         font-size: 25px;
