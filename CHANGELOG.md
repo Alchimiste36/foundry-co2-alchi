@@ -1,3 +1,8 @@
+# 1.6.5
+
+## Améliorations
+- Tooltip des formules dans le chat : les messages d'attaque et de dégâts affichent maintenant un tooltip sur la ligne de formule dans le footer, permettant au MJ de vérifier les formules utilisées par les joueurs (bonus, malus, capacités activées). ([#395](https://github.com/BlackBookEditions/foundry-co2/issues/395))
+
 # 1.6.4
 
 ## Corrections

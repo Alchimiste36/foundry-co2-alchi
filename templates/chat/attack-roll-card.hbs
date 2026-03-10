@@ -76,7 +76,7 @@
   <footer class="card-footer">
     <div class="dice-roll" data-action="expandRoll">
       <div class="dice-result">
-        <div class="dice-formula">{{localize "CO.ui.formula"}} : {{formula}}</div>
+        <div class="dice-formula" data-tooltip="{{formulaAttackTooltip}}" data-tooltip-direction="UP">{{localize "CO.ui.formula"}} : {{formula}}</div>
         {{{tooltip}}}
       </div>
       {{#if showDifficulty}}

@@ -524,6 +524,8 @@ export class COAttackRoll extends CORoll {
         hasAttackSuccessThreshold: dialogContext.hasAttackSuccessThreshold,
         attackSuccessThreshold: dialogContext.attackSuccessThreshold,
         selectedStatuses: withDialog ? rollContext.selectedStatuses : undefined,
+        formulaAttackTooltip: dialogContext.formulaAttackTooltip || "",
+        formulaDamageTooltip: dialogContext.formulaDamageTooltip || "",
         ...options,
       }
 
@@ -556,6 +558,7 @@ export class COAttackRoll extends CORoll {
           flavor: dialogContext.flavor,
           tooltip: damageRollTooltip,
           formulaDamage: damageFormula,
+          formulaDamageTooltip: dialogContext.formulaDamageTooltip || "",
           tempDamage: rollContext.tempDamage,
           ...options,
         }
@@ -575,6 +578,7 @@ export class COAttackRoll extends CORoll {
         flavor: dialogContext.flavor,
         tooltip: tooltip,
         formulaDamage: formula,
+        formulaDamageTooltip: dialogContext.formulaDamageTooltip || "",
         tempDamage: rollContext.tempDamage,
         ...options,
       }
@@ -665,6 +669,8 @@ export class COAttackRoll extends CORoll {
       tactical,
       opposeResult: this.options.opposeResult,
       opposeTooltip: this.options.opposeTooltip,
+      formulaAttackTooltip: isPrivate ? "" : this.options.formulaAttackTooltip || "",
+      formulaDamageTooltip: isPrivate ? "" : this.options.formulaDamageTooltip || "",
     }
   }
 
@@ -689,6 +695,7 @@ export class COAttackRoll extends CORoll {
       actorId: this.options.actorId,
       speaker: ChatMessage.getSpeaker({ actor: this.options.actorId, scene: canvas.scene }),
       tempDamage: this.options.tempDamage,
+      formulaDamageTooltip: isPrivate ? "" : this.options.formulaDamageTooltip || "",
     }
   }
 

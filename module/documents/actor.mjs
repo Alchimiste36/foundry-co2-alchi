@@ -1973,6 +1973,13 @@ export default class COActor extends Actor {
     // Récupération du tooltip du critique
     criticalTooltip = this.system.combat.crit.tooltipValue
 
+    // Enrichissement du tooltip d'attaque avec les modificateurs de combat
+    if (this.type === "character") {
+      const attackSkillKey = actionType === SYSTEM.ACTION_TYPES.spell.id || actionType === SYSTEM.ACTION_TYPES.magical.id ? "magic" : actionType
+      const attackSkill = this.system.combat[attackSkillKey]
+      if (attackSkill?.tooltipValue) skillFormulaTooltip = attackSkill.tooltipValue
+    }
+
     // Gestion des dés bonus et malus
     let bonusDices = 0
     let malusDices = 0
