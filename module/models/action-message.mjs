@@ -52,6 +52,7 @@ export default class ActionMessageData extends BaseMessageData {
         formulaType: new fields.StringField({ required: false, choices: SYSTEM.RESOLVER_FORMULA_TYPE }),
         elementType: new fields.StringField({ required: false }),
       }),
+      effectsApplied: new fields.BooleanField({ initial: false }),
       applyOn: new fields.StringField({ required: false }), // Deprecated
     })
   }
@@ -381,23 +382,30 @@ export default class ActionMessageData extends BaseMessageData {
                 speaker: message.speaker,
                 rollMode: rolls[0].options.rollMode,
                 targetResults: newTargetResults,
+                customEffect: message.system.customEffect,
+                additionalEffect: message.system.additionalEffect,
               })
             } else if (outcome.isSuccess) {
               await OpposedRollHandler.triggerLinkedDamage({
                 linkedRoll: message.system.linkedRoll,
                 speaker: message.speaker,
                 rollMode: rolls[0].options.rollMode,
+                customEffect: message.system.customEffect,
+                additionalEffect: message.system.additionalEffect,
               })
             }
 
-            // Gestion des custom effects
-            const rowResultForEffect = { ...attackerResult, ...outcome }
-            await OpposedRollHandler.applyEffects({
-              customEffect: message.system.customEffect,
-              additionalEffect: message.system.additionalEffect,
-              result: rowResultForEffect,
-              targetActor,
-            })
+            // Gestion des custom effects — différée au bouton "Appliquer les DM" si un message de dommages existe
+            const hasLinkedDamage = message.system.linkedRoll && Object.keys(message.system.linkedRoll).length > 0
+            if (!hasLinkedDamage) {
+              const rowResultForEffect = { ...attackerResult, ...outcome }
+              await OpposedRollHandler.applyEffects({
+                customEffect: message.system.customEffect,
+                additionalEffect: message.system.additionalEffect,
+                result: rowResultForEffect,
+                targetActor,
+              })
+            }
 
             // Mise à jour du message de chat
             const updateData = { rolls }
@@ -606,8 +614,33 @@ export default class ActionMessageData extends BaseMessageData {
               }
             }
 
-            // Persistance des choix (multiplicateurs et RD) pour les cibles issues du jet
+            // Application des effets supplémentaires (différée depuis le jet opposé)
             const message = this.parent
+            const customEffect = message.system.customEffect
+            const additionalEffect = message.system.additionalEffect
+            if (customEffect && additionalEffect?.active && !message.system.effectsApplied) {
+              const msgTargetResults = message.system.targetResults ?? []
+              for (const row of rows) {
+                if (row.style.display === "none") continue
+                const targetUuid = row.dataset.targetUuid
+                if (!targetUuid) continue
+                const activeBtn = row.querySelector(".multiplier-btn.active")
+                const multiplier = activeBtn ? parseFloat(activeBtn.dataset.multiplier) : 1
+                if (multiplier === 0) continue
+
+                const tr = msgTargetResults.find((t) => t.uuid === targetUuid)
+                const result = tr ? { isSuccess: tr.isSuccess, isFailure: tr.isFailure, isCritical: tr.isCritical, isFumble: tr.isFumble } : { isSuccess: true, isFailure: false }
+                if (!Resolver.shouldManageAdditionalEffect(result, additionalEffect)) continue
+
+                const targetActor = fromUuidSync(targetUuid)
+                if (targetActor) {
+                  if (game.user.isGM) await targetActor.applyCustomEffect(customEffect)
+                  else await game.users.activeGM.query("co2.applyCustomEffect", { ce: customEffect, targets: [targetActor.uuid] })
+                }
+              }
+            }
+
+            // Persistance des choix (multiplicateurs, RD, effectsApplied) pour les cibles issues du jet
             const targetResults = foundry.utils.deepClone(message.system.targetResults ?? [])
             let changed = false
             for (const row of targetList.querySelectorAll('.apply-target-row[data-source="targeted"]')) {
@@ -629,12 +662,15 @@ export default class ActionMessageData extends BaseMessageData {
               }
             }
             if (message.system.appliedTempDamage !== tempDamage) changed = true
+            const shouldMarkEffectsApplied = customEffect && additionalEffect?.active && !message.system.effectsApplied
+            if (shouldMarkEffectsApplied) changed = true
             if (changed) {
               const updateData = { "system.targetResults": targetResults, "system.appliedTempDamage": tempDamage }
+              if (shouldMarkEffectsApplied) updateData["system.effectsApplied"] = true
               if (game.user.isGM) {
                 await message.update(updateData)
               } else {
-                await game.users.activeGM.query("co2.updateTargetResults", { existingMessageId: message.id, targetResults })
+                await game.users.activeGM.query("co2.updateTargetResults", { existingMessageId: message.id, targetResults, effectsApplied: shouldMarkEffectsApplied || undefined })
               }
             }
           })

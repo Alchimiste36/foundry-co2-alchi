@@ -96,12 +96,19 @@ export default class OpposedRollHandler {
    * @param {object} params.linkedRoll Données sérialisées du jet de dommages
    * @param {object} params.speaker Speaker du message de chat
    * @param {string} params.rollMode Mode de visibilité du jet
+   * @param {object} [params.customEffect] Effet personnalisé à propager au message de dommages
+   * @param {object} [params.additionalEffect] Configuration de l'effet additionnel
    */
-  static async triggerLinkedDamage({ linkedRoll, speaker, rollMode }) {
+  static async triggerLinkedDamage({ linkedRoll, speaker, rollMode, customEffect, additionalEffect }) {
     if (!linkedRoll || Object.keys(linkedRoll).length === 0) return
     const damageRoll = Roll.fromData(linkedRoll)
+    const damageSystem = { subtype: "damage" }
+    if (customEffect && additionalEffect?.active) {
+      damageSystem.customEffect = customEffect
+      damageSystem.additionalEffect = additionalEffect
+    }
     await damageRoll.toMessage(
-      { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: { subtype: "damage" }, speaker },
+      { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: damageSystem, speaker },
       { messageMode: rollMode },
     )
   }
@@ -114,9 +121,11 @@ export default class OpposedRollHandler {
    * @param {object} params.speaker Speaker du message de chat
    * @param {string} params.rollMode Mode de visibilité du jet
    * @param {Array} params.targetResults Résultats par cible (toutes les cibles)
+   * @param {object} [params.customEffect] Effet personnalisé à propager au message de dommages
+   * @param {object} [params.additionalEffect] Configuration de l'effet additionnel
    * @returns {Promise<string|null>} L'ID du message de dommages créé ou existant
    */
-  static async createOrUpdateDamageMessage({ linkedRoll, linkedDamageMessageId, speaker, rollMode, targetResults }) {
+  static async createOrUpdateDamageMessage({ linkedRoll, linkedDamageMessageId, speaker, rollMode, targetResults, customEffect, additionalEffect }) {
     if (!linkedRoll || Object.keys(linkedRoll).length === 0) return null
 
     const resolvedTargets = targetResults?.filter((tr) => !tr.needsOppositeRoll) ?? []
@@ -132,6 +141,10 @@ export default class OpposedRollHandler {
     const damageRoll = Roll.fromData(linkedRoll)
     const damageSystem = { subtype: "damage" }
     if (resolvedTargets.length > 0) damageSystem.targetResults = resolvedTargets
+    if (customEffect && additionalEffect?.active) {
+      damageSystem.customEffect = customEffect
+      damageSystem.additionalEffect = additionalEffect
+    }
     const msg = await damageRoll.toMessage(
       { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: damageSystem, speaker },
       { messageMode: rollMode },
