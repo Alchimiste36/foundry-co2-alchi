@@ -61,20 +61,19 @@ export default class OpposedRollHandler {
    * @param {object} params.defenderResult Résultat analysé du jet du défenseur (isCritical, isFumble)
    * @param {number} params.attackerTotal Total du jet de l'attaquant
    * @param {number} params.defenderTotal Total du jet du défenseur
-   * @param {number} params.attackerProduct Produit du dé de l'attaquant (rolls[0].product)
    * @returns {{ isSuccess: boolean, isFailure: boolean }}
    */
-  static computeOutcome({ attackerResult, defenderResult, attackerTotal, defenderTotal, attackerProduct }) {
+  static computeOutcome({ attackerResult, defenderResult, attackerTotal, defenderTotal }) {
     let isSuccess = attackerTotal >= defenderTotal
     let isFailure = !isSuccess
 
     if (defenderResult.isCritical && !attackerResult.isCritical) {
       isSuccess = false
       isFailure = true
-    } else if (defenderResult.isFumble && attackerProduct > 1) {
+    } else if (defenderResult.isFumble && !attackerResult.isFumble) {
       isSuccess = true
       isFailure = false
-    } else if (!defenderResult.isCritical && attackerProduct === 20) {
+    } else if (attackerResult.isCritical && !defenderResult.isCritical) {
       isSuccess = true
       isFailure = false
     }
@@ -235,7 +234,7 @@ export default class OpposedRollHandler {
         const newDifficulty = parseInt(tr.difficulty) + 10
         const isSuccess = attackerResult.isCritical ? true : attackerResult.isFumble ? false : rolls[0].total >= newDifficulty
         const isFailure = !isSuccess
-        return { ...tr, difficulty: newDifficulty, isSuccess, isFailure, opposeHasLuckyPoints: false }
+        return { ...tr, difficulty: newDifficulty, isSuccess, isFailure, isCritical: attackerResult.isCritical, isFumble: attackerResult.isFumble, opposeHasLuckyPoints: false }
       })
       rolls[0].options.targetResults = newTargetResults
       await this.updateDamageMessageTargets({ linkedDamageMessageId: message.system.linkedDamageMessageId, targetResults: newTargetResults })

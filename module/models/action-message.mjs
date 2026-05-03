@@ -341,7 +341,6 @@ export default class ActionMessageData extends BaseMessageData {
               defenderResult: opposed.resultAnalysis,
               attackerTotal: rolls[0].total,
               defenderTotal: opposed.total,
-              attackerProduct: rolls[0].product,
             })
 
             // Mise à jour de targetResults (par cible) ou fallback legacy (system.result)
@@ -358,6 +357,8 @@ export default class ActionMessageData extends BaseMessageData {
                   difficulty: opposed.total,
                   isSuccess: outcome.isSuccess,
                   isFailure: outcome.isFailure,
+                  isCritical: attackerResult.isCritical,
+                  isFumble: attackerResult.isFumble,
                   needsOppositeRoll: false,
                   opposeActorId: opposed.actorId,
                   opposeHasLuckyPoints: opposed.hasLuckyPoints,

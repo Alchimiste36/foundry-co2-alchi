@@ -145,7 +145,6 @@ export default class SkillMessageData extends BaseMessageData {
           defenderResult: opposed.resultAnalysis,
           attackerTotal: rolls[0].total,
           defenderTotal: opposed.total,
-          attackerProduct: rolls[0].product,
         })
         newResult.isSuccess = outcome.isSuccess
         newResult.isFailure = outcome.isFailure
