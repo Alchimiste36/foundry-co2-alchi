@@ -304,11 +304,23 @@ export class Resolver extends foundry.abstract.DataModel {
       customEffect = await this._createCustomEffect(actor, item, action)
     }
 
-    // Gestion des cibles
-    const targets = this.getResolverTargets(actor, action.actionName)
-    if (this.shouldWarnMissingTargets(targets)) {
-      ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
-      return false
+    // Gestion des cibles — pour une sauvegarde, "aucune cible" est traitée comme "cible unique"
+    let targets
+    let effectiveTargetType
+    if (this.target.type === SYSTEM.RESOLVER_TARGET.none.id) {
+      effectiveTargetType = SYSTEM.RESOLVER_TARGET.single.id
+      targets = actor.acquireTargets(effectiveTargetType, this.target.scope, 1, action.actionName)
+      if (targets.length === 0) {
+        ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
+        return false
+      }
+    } else {
+      effectiveTargetType = this.hasOptionalTargets() ? SYSTEM.RESOLVER_TARGET.none.id : this.target.type
+      targets = this.getResolverTargets(actor, action.actionName)
+      if (this.shouldWarnMissingTargets(targets)) {
+        ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
+        return false
+      }
     }
 
     if (CONFIG.debug.co2?.resolvers) console.debug(Utils.log("Resolver save - Targets", targets))
@@ -319,7 +331,7 @@ export class Resolver extends foundry.abstract.DataModel {
       difficulty: difficultyFormulaEvaluated,
       difficultyFormula: this.saveDifficulty,
       showDifficulty,
-      targetType: this.hasOptionalTargets() ? SYSTEM.RESOLVER_TARGET.none.id : this.target.type,
+      targetType: effectiveTargetType,
       targets: targets,
       customEffect,
       additionalEffect: this.additionalEffect,
