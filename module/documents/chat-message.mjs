@@ -72,12 +72,13 @@ export default class COChatMessage extends ChatMessage {
    * @static
    * @async
    */
-  static async _handleQueryUpdateMessageAfterLuck({ existingMessageId, rolls, result, targetResults } = {}) {
+  static async _handleQueryUpdateMessageAfterLuck({ existingMessageId, rolls, result, targetResults, luckyPointSuppressEffects } = {}) {
     const message = game.messages.get(existingMessageId)
     if (!message) return
     const updateData = { rolls: rolls }
     if (result !== undefined && result !== null) updateData["system.result"] = result
     if (targetResults !== undefined) updateData["system.targetResults"] = targetResults
+    if (luckyPointSuppressEffects) updateData["system.luckyPointSuppressEffects"] = true
     await message.update(updateData)
   }
 
@@ -115,11 +116,15 @@ export default class COChatMessage extends ChatMessage {
    * @static
    * @async
    */
-  static async _handleQueryUpdateMessageAfterSavedRoll({ existingMessageId, rolls, targetResults } = {}) {
+  static async _handleQueryUpdateMessageAfterSavedRoll({ existingMessageId, rolls, targetResults, dmgApplied, effectsApplied, appliedTempDamage } = {}) {
     const message = game.messages.get(existingMessageId)
     if (!message) return
-    const updateData = { rolls }
+    const updateData = {}
+    if (rolls !== undefined) updateData.rolls = rolls
     if (targetResults !== undefined) updateData["system.targetResults"] = targetResults
+    if (dmgApplied !== undefined) updateData["system.dmgApplied"] = dmgApplied
+    if (effectsApplied !== undefined) updateData["system.effectsApplied"] = effectsApplied
+    if (appliedTempDamage !== undefined) updateData["system.appliedTempDamage"] = appliedTempDamage
     await message.update(updateData)
   }
 
@@ -134,11 +139,12 @@ export default class COChatMessage extends ChatMessage {
    * @static
    * @async
    */
-  static async _handleQueryUpdateTargetResults({ existingMessageId, targetResults, effectsApplied } = {}) {
+  static async _handleQueryUpdateTargetResults({ existingMessageId, targetResults, effectsApplied, luckyPointSuppressEffects } = {}) {
     const message = game.messages.get(existingMessageId)
     if (!message) return
     const updateData = { "system.targetResults": targetResults }
     if (effectsApplied) updateData["system.effectsApplied"] = true
+    if (luckyPointSuppressEffects) updateData["system.luckyPointSuppressEffects"] = true
     await message.update(updateData)
   }
 }

@@ -2349,6 +2349,11 @@ export default class COActor extends Actor {
       targets = [],
       customEffect = undefined,
       additionalEffect = undefined,
+      dmgRoll = null,
+      dmgTotal = null,
+      dmgFormula = null,
+      dmgTooltip = null,
+      halfDmgOnSave = true,
     } = {},
   ) {
     const options = {
@@ -2361,6 +2366,11 @@ export default class COActor extends Actor {
       targets,
       customEffect,
       additionalEffect,
+      dmgRoll,
+      dmgTotal,
+      dmgFormula,
+      dmgTooltip,
+      halfDmgOnSave,
     }
 
     /**
@@ -2436,6 +2446,8 @@ export default class COActor extends Actor {
       })
     }
 
+    const hasDmg = dmgTotal !== null && dmgTotal !== undefined
+
     const contentData = {
       ability: ability,
       difficulty: difficulty,
@@ -2446,6 +2458,11 @@ export default class COActor extends Actor {
       itemImg: item?.img ?? null,
       itemName: item?.name ?? "",
       actionName: actionName ?? "",
+      hasDmg,
+      dmgTotal,
+      dmgFormula,
+      dmgTooltip,
+      halfDmgOnSave,
     }
 
     const messageSystem = {
@@ -2457,15 +2474,22 @@ export default class COActor extends Actor {
       targetResults,
       customEffect,
       additionalEffect,
+      dmgTotal: hasDmg ? dmgTotal : null,
+      dmgFormula: hasDmg ? dmgFormula : null,
+      dmgTooltip: hasDmg ? dmgTooltip : null,
+      halfDmgOnSave,
     }
 
-    new CoChat(this)
+    const chatBuilder = new CoChat(this)
       .withTemplate("systems/co2/templates/chat/save-card.hbs")
       .withData(contentData)
       .withMessageType("save")
       .withSystem(messageSystem)
       .withOptions({ speaker: speaker, style: CONST.CHAT_MESSAGE_STYLES.OTHER })
-      .create()
+
+    if (dmgRoll) chatBuilder.withRolls([dmgRoll])
+
+    chatBuilder.create()
 
     return true
   }

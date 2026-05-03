@@ -1,5 +1,5 @@
 {{log "Chroniques Oubliées | save card" this}}
-<div class="co chat-card roll-card save-card" data-actor-id="{{actorId}}">
+<div class="co chat-card roll-card save-card" data-actor-id="{{actorId}}" {{#if hasDmg}}data-dmg-total="{{dmgTotal}}"{{/if}}>
   <header class="card-header flexcol">
     <div class="card-item-card">
       {{#if itemImg}}
@@ -25,6 +25,41 @@
         </div>
       </section>
     </section>
+
+    {{#if hasDmg}}
+      <section class="save-dmg-section">
+        <details class="save-dmg-details">
+          <summary>
+            <div class="save-dmg-total-group">
+              <div class="form-group total-result">
+                <div>{{dmgTotal}}</div><div class="dm-text"> DM</div>
+              </div>
+            </div>
+          </summary>
+          <div class="save-dmg-details-content">
+            <div class="dice-roll">
+              <div class="dice-result">
+                <div class="dice-formula">{{localize "CO.ui.formula"}} : {{dmgFormula}}</div>
+                {{{dmgTooltip}}}
+              </div>
+            </div>
+          </div>
+        </details>
+        <div class="save-dmg-options">
+          <div class="temp-dm">
+            <label for="saveTempDm" class="temp-dm-checkbox" data-tooltip="{{localize 'CO.ui.tempText'}}" data-tooltip-direction="UP">{{localize "CO.ui.temp"}}</label>
+            <input type="checkbox" id="saveTempDm" name="saveTempDm" class="temp-dm-checkbox" />
+          </div>
+        </div>
+      </section>
+    {{/if}}
+
     <section class="targets"></section>
+
+    {{#if hasDmg}}
+      <section class="save-apply-section">
+        <button type="button" class="save-apply-btn">{{localize "CO.ui.apply"}}</button>
+      </section>
+    {{/if}}
   </div>
 </div>

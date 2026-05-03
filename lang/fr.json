@@ -724,6 +724,8 @@
       "targeted": "Ciblé",
       "selected": "Sélectionné",
       "noDamage": "Pas de dommages",
+      "halfDmgOnSave": "Demi-DM si sauvegarde réussie",
+      "applied": "Appliqué",
       "newAction": "",
       "capacitiesOffPaths": "Capacités hors voies",
       "capacitiesLearned": "Capacités acquises",

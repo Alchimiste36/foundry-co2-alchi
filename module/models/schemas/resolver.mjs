@@ -44,6 +44,7 @@ export class Resolver extends foundry.abstract.DataModel {
       saveAbility: new fields.StringField({ required: false, choices: SYSTEM.ABILITIES, initial: undefined }),
       saveDifficulty: new fields.StringField({ required: false, nullable: false, initial: undefined }), // Peut être une formule
       // Ajout des seuils de succès automatiques
+      halfDmgOnSave: new fields.BooleanField({ initial: true }),
       hasAttackSuccessThreshold: new fields.BooleanField({ initial: false }), // Si true alors on a un seuil de succès auto
       attackSuccessThreshold: new fields.NumberField({ integer: true, positive: true }), // Le seuil minimum pour faire un succes auto (ex : 15 pour 15-20)
     }
@@ -288,7 +289,6 @@ export class Resolver extends foundry.abstract.DataModel {
     const saveAbility = this.saveAbility
 
     let difficultyFormula = this.saveDifficulty
-    // Modification pour prendre en compte tous les cas possible de formule et pour calculer un total avec jet de dé si dé présent
     difficultyFormula = Utils.evaluateCoModifierWithDiceValue(actor, difficultyFormula, item.uuid)
     const resultat = await new Roll(difficultyFormula).evaluate()
     difficultyFormula = resultat.total.toString()
@@ -297,6 +297,22 @@ export class Resolver extends foundry.abstract.DataModel {
     let showDifficulty = false
     const displayDifficulty = game.settings.get("co2", "displayDifficulty")
     showDifficulty = displayDifficulty === "all" || (displayDifficulty === "gm" && game.user.isGM)
+
+    // Jet de dommages si une formule est définie
+    let dmgRoll = null
+    let dmgTotal = null
+    let dmgFormula = null
+    let dmgTooltip = null
+    const hasDmgFormula = this.dmg?.formula && this.dmg.formula !== "" && this.dmg.formula !== "0"
+    if (hasDmgFormula) {
+      let damageFormula = this.dmg.formula
+      damageFormula = Utils.evaluateFormulaCustomValues(actor, damageFormula, item.uuid)
+      damageFormula = Roll.replaceFormulaData(damageFormula, actor.getRollData())
+      dmgRoll = await new CORoll(damageFormula).evaluate()
+      dmgTotal = dmgRoll.total
+      dmgFormula = damageFormula
+      dmgTooltip = await dmgRoll.getTooltip()
+    }
 
     // Création de l'éventuel custom effect
     let customEffect
@@ -335,15 +351,14 @@ export class Resolver extends foundry.abstract.DataModel {
       targets: targets,
       customEffect,
       additionalEffect: this.additionalEffect,
+      dmgRoll,
+      dmgTotal,
+      dmgFormula,
+      dmgTooltip,
+      halfDmgOnSave: this.halfDmgOnSave,
     })
     if (!save) return false
 
-    // TODO Effet supplémentaire ici ?
-    /* Gestion des effets supplémentaires
-    if (this.additionalEffect.active && this.additionalEffect.applyOn === SYSTEM.RESOLVER_RESULT.always.id) {
-      await this._manageAdditionalEffect(actor, item, action)
-    }
-    */
     return true
   }
 

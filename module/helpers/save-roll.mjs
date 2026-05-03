@@ -34,7 +34,7 @@ export default class SaveRollHandler {
    * @param {ChatMessage} params.message Le message de chat
    * @param {string} params.targetUuid UUID de la cible dans targetResults
    */
-  static async spendSaverLuckyPoint({ saverActor, message, targetUuid }) {
+  static async spendSaverLuckyPoint({ saverActor, message, targetUuid, deferEffects = false }) {
     if (!saverActor) return
 
     if (saverActor.system.resources.fortune.value > 0) {
@@ -68,14 +68,17 @@ export default class SaveRollHandler {
       }
     })
 
-    const targetActor = fromUuidSync(targetUuid)
-    if (targetActor) {
-      await SaveRollHandler.applyEffects({
-        customEffect: message.system.customEffect,
-        additionalEffect: message.system.additionalEffect,
-        result: newResult,
-        targetActor,
-      })
+    // Si les effets sont différés (save avec DM), ne pas appliquer maintenant
+    if (!deferEffects) {
+      const targetActor = fromUuidSync(targetUuid)
+      if (targetActor) {
+        await SaveRollHandler.applyEffects({
+          customEffect: message.system.customEffect,
+          additionalEffect: message.system.additionalEffect,
+          result: newResult,
+          targetActor,
+        })
+      }
     }
 
     await SaveRollHandler.updateMessage({ message, updateData: { rolls, "system.targetResults": newTargetResults } })

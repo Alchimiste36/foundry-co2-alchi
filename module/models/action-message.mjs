@@ -53,6 +53,7 @@ export default class ActionMessageData extends BaseMessageData {
         elementType: new fields.StringField({ required: false }),
       }),
       effectsApplied: new fields.BooleanField({ initial: false }),
+      luckyPointSuppressEffects: new fields.BooleanField({ initial: false }),
       applyOn: new fields.StringField({ required: false }), // Deprecated
     })
   }
@@ -210,6 +211,11 @@ export default class ActionMessageData extends BaseMessageData {
 
             // Recalcul des résultats par cible avec le nouveau total
             const currentTargetResults = message.system.targetResults ?? []
+            // Si aucune cible n'était touchée avant le PC, les effets supplémentaires ne s'appliquent pas
+            const hadAnySuccessBeforePC = currentTargetResults.length > 0
+              ? currentTargetResults.some((tr) => !tr.needsOppositeRoll && tr.isSuccess)
+              : !!this.result?.isSuccess
+            const suppressEffects = !hadAnySuccessBeforePC
             let newTargetResults = currentTargetResults
             if (currentTargetResults.length > 0) {
               newTargetResults = Utils.recomputeTargetResults(currentTargetResults, rolls[0].total, newResult)
@@ -227,6 +233,7 @@ export default class ActionMessageData extends BaseMessageData {
               await OpposedRollHandler.updateDamageMessageTargets({
                 linkedDamageMessageId: message.system.linkedDamageMessageId,
                 targetResults: newTargetResults,
+                luckyPointSuppressEffects: suppressEffects || undefined,
               })
             } else if (game.settings.get("co2", "useComboRolls") && hasLinkedRoll) {
               // Un message de dommages existe déjà si la difficulté est masquée (MJ) ou si le résultat global était un succès
@@ -246,10 +253,12 @@ export default class ActionMessageData extends BaseMessageData {
                       }
                       return dtr
                     })
+                    const dmgUpdateData = { "system.targetResults": updatedDamageTargetResults }
+                    if (suppressEffects) dmgUpdateData["system.luckyPointSuppressEffects"] = true
                     if (game.user.isGM) {
-                      await damageMessage.update({ "system.targetResults": updatedDamageTargetResults })
+                      await damageMessage.update(dmgUpdateData)
                     } else {
-                      await game.users.activeGM.query("co2.updateTargetResults", { existingMessageId: damageMessage.id, targetResults: updatedDamageTargetResults })
+                      await game.users.activeGM.query("co2.updateTargetResults", { existingMessageId: damageMessage.id, targetResults: updatedDamageTargetResults, luckyPointSuppressEffects: suppressEffects || undefined })
                     }
                   }
                 }
@@ -258,6 +267,7 @@ export default class ActionMessageData extends BaseMessageData {
                 const damageRoll = Roll.fromData(message.system.linkedRoll)
                 const damageSystem = { subtype: "damage" }
                 if (currentTargetResults.length > 0) damageSystem.targetResults = newTargetResults
+                if (suppressEffects) damageSystem.luckyPointSuppressEffects = true
                 await damageRoll.toMessage(
                   { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: damageSystem, speaker: message.speaker },
                   { messageMode: rolls[0].options.rollMode },
@@ -268,7 +278,7 @@ export default class ActionMessageData extends BaseMessageData {
             // Gestion des custom effects
             const customEffect = message.system.customEffect
             const additionalEffect = message.system.additionalEffect
-            if (customEffect && additionalEffect && additionalEffect.active && Resolver.shouldManageAdditionalEffect(newResult, additionalEffect)) {
+            if (customEffect && additionalEffect && additionalEffect.active && !suppressEffects && Resolver.shouldManageAdditionalEffect(newResult, additionalEffect)) {
               const target = message.system.targets.length > 0 ? message.system.targets[0] : null
               if (target) {
                 const targetActor = fromUuidSync(target)
@@ -282,6 +292,7 @@ export default class ActionMessageData extends BaseMessageData {
             // Mise à jour du message de chat
             const updateData = { rolls: rolls, "system.result": newResult }
             if (currentTargetResults.length > 0) updateData["system.targetResults"] = newTargetResults
+            if (suppressEffects) updateData["system.luckyPointSuppressEffects"] = true
 
             if (game.user.isGM) {
               await message.update(updateData)
@@ -291,6 +302,7 @@ export default class ActionMessageData extends BaseMessageData {
                 rolls: rolls,
                 result: newResult,
                 targetResults: currentTargetResults.length > 0 ? newTargetResults : undefined,
+                luckyPointSuppressEffects: suppressEffects || undefined,
               })
             }
           })
@@ -619,7 +631,7 @@ export default class ActionMessageData extends BaseMessageData {
             const message = this.parent
             const customEffect = message.system.customEffect
             const additionalEffect = message.system.additionalEffect
-            if (customEffect && additionalEffect?.active && !message.system.effectsApplied) {
+            if (customEffect && additionalEffect?.active && !message.system.effectsApplied && !message.system.luckyPointSuppressEffects) {
               const msgTargetResults = message.system.targetResults ?? []
               for (const row of rows) {
                 if (row.style.display === "none") continue
