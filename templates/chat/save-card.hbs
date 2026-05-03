@@ -17,76 +17,14 @@
   </header>
 
   <div class="card-content">
-    {{#if hasTargetResults}}
-      <section class="bloc-result has-target-results">
-        <section class="result">
-          <div class="difficulty-group">
-            <div class="difficulty-icon" data-tooltip="{{localize 'CO.ui.saves'}} : {{getAbilityLabel ability}}" data-tooltip-direction="UP"><i class="fas fa-shield-exclamation"></i></div>
-            <div class="difficulty-value display-difficulty" data-tooltip="{{localize 'CO.label.long.difficulty'}}{{#if difficultyFormula}} ({{difficultyFormula}}){{/if}}" data-tooltip-direction="UP">{{difficulty}}</div>
-          </div>
-        </section>
-      </section>
-      <section class="targets"></section>
-    {{else}}
-      <section class="targets"></section>
-      <section class="bloc-result">
-        <section class="result">
-          <div class="total-result">
-              <div class="save-total"></div>
-          </div>
-          <div class="lucky-points">
-            <a class="lp-button-save">
-              <i class="fa-regular fa-clover" data-tooltip="{{localize 'CO.dialogs.spendLuckyPoint'}}" data-tooltip-direction="UP"></i>
-            </a>
-          </div>
-
-          {{#if (eq difficulty "")}}{{else}}
-            <div class="vs"><label>VS</label></div>
-            <div class="diff-result">
-              <div class="display-difficulty" data-tooltip="{{localize 'CO.label.long.difficulty'}}{{#if difficultyFormula}} ({{difficultyFormula}}){{/if}}" data-tooltip-direction="UP">
-                <i class="fas fa-shield-exclamation"></i> {{difficulty}}
-              </div>
-            </div>
-          {{/if}}
-        </section>
-        <section class="result-sentence">
-          <button class="save-roll" data-save-target="{{targetUuid}}" data-save-ability="{{ability}}" data-save-difficulty="{{difficulty}}">
-            <span class="save-title">{{localize "CO.ui.saves"}}</span>
-            <span class="save-skill">{{getAbilityLabel ability}}</span>
-          </button>
-            {{#if showDifficulty}}
-              {{#if isFumble}}
-                <div class="show-result failure fumble"><i class="fas fa-skull-crossbones"></i><br /><strong>{{localize "CO.roll.fumble"}}</strong></div>
-              {{else}}
-                {{#if isSuccess}}
-                  {{#if isCritical}}
-                    <div class="show-result success critical"><i class="fas fa-check-double"></i><br /><strong>{{localize "CO.roll.critical"}}</strong></div>
-                  {{else}}
-                    <div class="show-result success"><i class="fas fa-check"></i><br /><strong>{{localize "CO.roll.success"}}</strong></div>
-                  {{/if}}
-                {{/if}}
-                {{#if isFailure}}
-                  <div class="show-result failure"><i class="fas fa-times"></i><br /><strong>{{localize "CO.roll.failure"}}</strong></div>
-                {{/if}}
-              {{/if}}
-            {{else}}
-              {{#if isCritical}}
-                <div class="show-result standard critical"><i class="fas fa-check-double"></i><br /><strong>{{localize "CO.roll.critical"}}</strong></div>
-              {{/if}}
-              {{#if isFumble}}
-                <div class="show-result failure fumble"><i class="fas fa-skull-crossbones"></i><br /><strong>{{localize "CO.roll.fumble"}}</strong></div>
-              {{/if}}
-            {{/if}}
-        </section>
-      </section>
-      <footer class="card-footer">
-        <div class="dice-roll" data-action="expandRoll">
-          <div class="dice-result">
-            <div class="dice-formula">{{localize "CO.ui.formula"}} : <span class="footer-formula"></span></div>
-            <span class="footer-tooltip"></span>
-          </div>
+    <section class="bloc-result has-target-results">
+      <section class="result">
+        <div class="difficulty-group">
+          <div class="difficulty-icon" data-tooltip="{{localize 'CO.ui.saves'}} : {{getAbilityLabel ability}}" data-tooltip-direction="UP"><i class="fas fa-shield-exclamation"></i></div>
+          <div class="difficulty-value display-difficulty" data-tooltip="{{localize 'CO.label.long.difficulty'}}{{#if difficultyFormula}} ({{difficultyFormula}}){{/if}}" data-tooltip-direction="UP">{{difficulty}}</div>
         </div>
-      </footer>
-    {{/if}}
+      </section>
+    </section>
+    <section class="targets"></section>
   </div>
 </div>

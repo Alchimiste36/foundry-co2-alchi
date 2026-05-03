@@ -1,7 +1,5 @@
 import BaseMessageData from "./base-message.mjs"
 import CustomEffectData from "./schemas/custom-effect.mjs"
-import { CORoll } from "../documents/roll.mjs"
-import { Resolver } from "./schemas/resolver.mjs"
 import Utils from "../helpers/utils.mjs"
 import SaveRollHandler from "../helpers/save-roll.mjs"
 
@@ -12,7 +10,6 @@ export default class SaveMessageData extends BaseMessageData {
       ability: new fields.StringField({ required: true }),
       difficulty: new fields.StringField({ required: true }),
       difficultyFormula: new fields.StringField({ required: false, nullable: true, blank: true }),
-      result: new fields.ObjectField(),
       customEffect: new fields.EmbeddedDataField(CustomEffectData),
       additionalEffect: new fields.SchemaField({
         active: new fields.BooleanField({ initial: false }),
@@ -25,7 +22,6 @@ export default class SaveMessageData extends BaseMessageData {
         formulaType: new fields.StringField({ required: false, choices: SYSTEM.RESOLVER_FORMULA_TYPE }),
         elementType: new fields.StringField({ required: false }),
       }),
-      showButton: new fields.BooleanField({ initial: true }),
       targetResults: new fields.ArrayField(
         new fields.SchemaField({
           uuid: new fields.StringField({ required: false, nullable: true, blank: true }),
@@ -55,78 +51,7 @@ export default class SaveMessageData extends BaseMessageData {
    * @returns {Promise<void>} Resout lorsque le HTML a ete mis a jour.
    */
   async alterMessageHTML(message, html) {
-    const hasTargetResults = (message.system.targetResults?.length ?? 0) > 0
-
-    if (hasTargetResults) {
-      this._buildMultiTargetHTML(message, html)
-      return
-    }
-
-    // Legacy (single target)
-    const targetsSection = html.querySelector(".targets")
-    if (!targetsSection) return
-
-    if (this.targetType !== SYSTEM.RESOLVER_TARGET.none.id) {
-      const targetActors = Array.from(message.system.targets)
-      if (targetActors.length > 0) {
-        const targetList = document.createElement("ul")
-        targetList.classList.add("target-list")
-        targetActors.forEach((actorUuid) => {
-          const actor = fromUuidSync(actorUuid)
-          if (!actor) return
-          const listItem = document.createElement("li")
-          const img = document.createElement("img")
-          img.src = actor.img
-          img.classList.add("target-actor-img")
-          listItem.appendChild(img)
-          const name = document.createElement("span")
-          name.textContent = actor.name
-          name.classList.add("name-stacked")
-          listItem.appendChild(name)
-          targetList.appendChild(listItem)
-        })
-        targetsSection.appendChild(targetList)
-      }
-    } else {
-      targetsSection.remove()
-    }
-
-    const displayDifficulty = game.settings.get("co2", "displayDifficulty")
-    if (displayDifficulty === "gm" && !game.user.isGM) {
-      const element = html.querySelector(".display-difficulty")
-      if (element) element.remove()
-    }
-
-    if (this.showButton) {
-      const totalDiv = html.querySelector(".save-total")
-      if (totalDiv) totalDiv.innerHTML = `<i class="fa-solid fa-square-question"></i>`
-      const footer = html.querySelector(".card-footer")
-      if (footer) footer.remove()
-      const luckyPointsDiv = html.querySelector(".lucky-points")
-      if (luckyPointsDiv) luckyPointsDiv.remove()
-    } else {
-      const button = html.querySelector(".save-roll")
-      if (button) button.remove()
-      const totalDiv = html.querySelector(".save-total")
-      if (totalDiv) {
-        totalDiv.innerHTML = `<div>${this.result.total}</div>`
-        totalDiv.setAttribute("data-tooltip", `${game.i18n.localize("CO.ui.total")}`)
-        totalDiv.setAttribute("data-tooltip-direction", "LEFT")
-      }
-      const footerFormula = html.querySelector(".footer-formula")
-      if (footerFormula) footerFormula.innerText = this.parent.rolls[0].formula
-      const footerTooltip = html.querySelector(".footer-tooltip")
-      if (footerTooltip) footerTooltip.innerHTML = this.parent.rolls[0].options.toolTip
-
-      const targetUuid = this.targets[0]
-      const currentUserActor = game.user.character
-      const currentUserActorUuid = currentUserActor ? currentUserActor.uuid : null
-      const hasLuckyPoints = currentUserActor?.system?.resources?.fortune?.value > 0
-      if (this.result.isCritical || currentUserActorUuid !== targetUuid || currentUserActor?.type !== "character" || !hasLuckyPoints) {
-        const luckyPointsDiv = html.querySelector(".lucky-points")
-        if (luckyPointsDiv) luckyPointsDiv.remove()
-      }
-    }
+    this._buildMultiTargetHTML(message, html)
   }
 
   /**
@@ -135,14 +60,7 @@ export default class SaveMessageData extends BaseMessageData {
    * @param {HTMLElement} html Element HTML representant le message a modifier.
    */
   async addListeners(html) {
-    const hasTargetResults = (this.targetResults?.length ?? 0) > 0
-
-    if (hasTargetResults) {
-      this._addMultiTargetListeners(html)
-      return
-    }
-
-    this._addLegacyListeners(html)
+    this._addMultiTargetListeners(html)
   }
 
   // ----------------------------------------------------------------
@@ -403,109 +321,4 @@ export default class SaveMessageData extends BaseMessageData {
     })
   }
 
-  // ----------------------------------------------------------------
-  //  Legacy (single target) : listeners
-  // ----------------------------------------------------------------
-
-  _addLegacyListeners(html) {
-    const luckyButton = html.querySelector(".lp-button-save")
-    const targetUuid = this.targets[0]
-    const currentUserActor = game.user.character
-    const currentUserActorUuid = currentUserActor ? currentUserActor.uuid : null
-
-    const displayButton = game.user.isGM || currentUserActorUuid === targetUuid
-
-    if (luckyButton && displayButton && !this.result.isCritical) {
-      luckyButton.addEventListener("click", async (event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        const messageId = event.currentTarget.closest(".message").dataset.messageId
-        if (!messageId) return
-        const message = game.messages.get(messageId)
-
-        let rolls = this.parent.rolls
-        rolls[0].options.bonus = String(parseInt(rolls[0].options.bonus) + 10)
-        rolls[0].options.hasLuckyPoints = false
-        rolls[0].options.luckyPointUsed = true
-        rolls[0]._total = parseInt(rolls[0].total) + 10
-
-        let newResult = CORoll.analyseRollResult(rolls[0])
-
-        const actorId = rolls[0].options.actorId
-        const actor = game.actors.get(actorId)
-        if (actor.system.resources.fortune.value > 0) {
-          actor.system.resources.fortune.value -= 1
-          await actor.update({ "system.resources.fortune.value": actor.system.resources.fortune.value })
-        }
-
-        const customEffect = message.system.customEffect
-        const additionalEffect = message.system.additionalEffect
-        if (customEffect && additionalEffect && additionalEffect.active && Resolver.shouldManageAdditionalEffect(newResult, additionalEffect)) {
-          const target = message.system.targets.length > 0 ? message.system.targets[0] : null
-          if (target) {
-            const targetActor = fromUuidSync(target)
-            if (game.user.isGM) await targetActor.applyCustomEffect(customEffect)
-            else {
-              await game.users.activeGM.query("co2.applyCustomEffect", { ce: customEffect, targets: [targetActor.uuid] })
-            }
-          }
-        }
-
-        if (game.user.isGM) {
-          await message.update({ rolls: rolls, "system.result": newResult })
-        } else {
-          await game.users.activeGM.query("co2.updateMessageAfterLuck", { existingMessageId: message.id, rolls: rolls, result: newResult })
-        }
-      })
-    }
-
-    const saveButton = html.querySelector(".save-roll")
-    const displaySaveButton = game.user.isGM || this.isActorTargeted
-
-    if (saveButton && displaySaveButton) {
-      saveButton.addEventListener("click", async (event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        const messageId = event.currentTarget.closest(".message").dataset.messageId
-        if (!messageId) return
-        const message = game.messages.get(messageId)
-        if (!message || !message.system) return
-
-        const dataset = event.currentTarget.dataset
-        const targetUuid = message.system.targets[0]
-        if (!targetUuid) return
-
-        const saveAbility = dataset.saveAbility
-        const difficulty = dataset.saveDifficulty
-
-        const targetActor = fromUuidSync(targetUuid)
-        if (!targetActor) return
-
-        const targetRollSkill = await targetActor.rollSkill(saveAbility, { difficulty, showResult: false, showOppositeRoll: false })
-        if (!targetRollSkill) return
-
-        message.system.result = targetRollSkill.result
-        message.system.linkedRoll = targetRollSkill.roll
-
-        let rolls = this.parent.rolls
-        rolls[0] = targetRollSkill.roll
-        rolls[0].options.oppositeRoll = false
-
-        const customEffect = message.system.customEffect
-        const additionalEffect = message.system.additionalEffect
-        if (customEffect && additionalEffect && additionalEffect.active && Resolver.shouldManageAdditionalEffect(targetRollSkill.result, additionalEffect)) {
-          if (game.user.isGM) await targetActor.applyCustomEffect(customEffect)
-          else {
-            await game.users.activeGM.query("co2.applyCustomEffect", { ce: customEffect, targets: [targetActor.uuid] })
-          }
-        }
-
-        if (game.user.isGM) {
-          await message.update({ rolls: rolls, "system.showButton": false, "system.result": targetRollSkill.result })
-        } else {
-          await game.users.activeGM.query("co2.updateMessageAfterSavedRoll", { existingMessageId: message.id, rolls: rolls, result: targetRollSkill.result })
-        }
-      })
-    }
-  }
 }

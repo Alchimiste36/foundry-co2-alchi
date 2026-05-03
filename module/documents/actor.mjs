@@ -2398,11 +2398,25 @@ export default class COActor extends Actor {
       return false
     }
 
-    const rollMode = game.settings.get("core", "messageMode")
-
-    // Construction des targetResults pour le multi-ciblage
+    // Construction des targetResults
     const targetResults = []
-    if (targetUuids.length > 0 && targetType !== SYSTEM.RESOLVER_TARGET.none.id && targetType !== SYSTEM.RESOLVER_TARGET.self.id) {
+    if (targetType === SYSTEM.RESOLVER_TARGET.none.id || targetType === SYSTEM.RESOLVER_TARGET.self.id) {
+      targetResults.push({
+        uuid: this.uuid,
+        name: this.name,
+        img: this.img ?? null,
+        needsSaveRoll: true,
+        total: null,
+        isSuccess: false,
+        isFailure: false,
+        isCritical: false,
+        isFumble: false,
+        saveActorId: null,
+        saveHasLuckyPoints: false,
+        rollFormula: null,
+        rollTooltip: null,
+      })
+    } else {
       targets.forEach((target) => {
         targetResults.push({
           uuid: target.actor?.uuid ?? target.uuid,
@@ -2421,15 +2435,12 @@ export default class COActor extends Actor {
         })
       })
     }
-    const hasTargetResults = targetResults.length > 0
 
     const contentData = {
       ability: ability,
       difficulty: difficulty,
       difficultyFormula: difficultyFormula ?? null,
-      showButton: !hasTargetResults,
       showDifficulty,
-      hasTargetResults,
       targetResults,
       flavor: flavor,
       itemImg: item?.img ?? null,
@@ -2443,7 +2454,6 @@ export default class COActor extends Actor {
       difficultyFormula: difficultyFormula ?? null,
       targetType,
       targets: targetUuids,
-      showButton: !hasTargetResults,
       targetResults,
       customEffect,
       additionalEffect,
