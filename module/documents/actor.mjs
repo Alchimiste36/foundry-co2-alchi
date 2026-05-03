@@ -2593,9 +2593,9 @@ export default class COActor extends Actor {
       return []
     }
 
-    // Validation du nombre de cibles
+    // Validation du nombre de cibles (number=0 pour multiple = illimité)
     const expectedNumber = single ? 1 : number
-    if (tokens.size > expectedNumber) {
+    if (expectedNumber > 0 && tokens.size > expectedNumber) {
       const error = game.i18n.format("CO.notif.warningIncorrectTargets", {
         number: expectedNumber,
         action: actionName,

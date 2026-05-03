@@ -82,7 +82,7 @@ export class Resolver extends foundry.abstract.DataModel {
   hasOptionalTargets() {
     return (
       this.target.type === SYSTEM.RESOLVER_TARGET.none.id ||
-      ((this.target.type === SYSTEM.RESOLVER_TARGET.single.id || this.target.type === SYSTEM.RESOLVER_TARGET.multiple.id) && this.target.number === 0)
+      (this.target.type === SYSTEM.RESOLVER_TARGET.single.id && this.target.number === 0)
     )
   }
 
