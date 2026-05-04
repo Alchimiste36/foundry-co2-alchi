@@ -276,9 +276,11 @@ export default class ActionMessageData extends BaseMessageData {
             }
 
             // Gestion des custom effects
+            // Pour les jets opposés, les effets sont gérés via le message de dégâts (bouton "Appliquer DM" ou résolution du jet opposé)
+            const hasOpposedRoll = !!message.system.oppositeValue
             const customEffect = message.system.customEffect
             const additionalEffect = message.system.additionalEffect
-            if (customEffect && additionalEffect && additionalEffect.active && !suppressEffects && Resolver.shouldManageAdditionalEffect(newResult, additionalEffect)) {
+            if (customEffect && additionalEffect && additionalEffect.active && !suppressEffects && !hasOpposedRoll && Resolver.shouldManageAdditionalEffect(newResult, additionalEffect)) {
               const target = message.system.targets.length > 0 ? message.system.targets[0] : null
               if (target) {
                 const targetActor = fromUuidSync(target)

@@ -171,7 +171,9 @@ export class Resolver extends foundry.abstract.DataModel {
     })
     if (!attack) return false
     // Gestion des effets supplémentaires
-    if (this.additionalEffect.active && Resolver.shouldManageAdditionalEffect(attack.results[0], this.additionalEffect)) {
+    // Pour les jets opposés, les effets sont gérés via le message de chat (bouton "Appliquer DM" ou résolution du jet opposé)
+    const isOpposedRoll = typeof this.skill.difficulty === "string" && this.skill.difficulty.includes("@oppose")
+    if (this.additionalEffect.active && !isOpposedRoll && Resolver.shouldManageAdditionalEffect(attack.results[0], this.additionalEffect)) {
       await this._manageAdditionalEffect(actor, item, action, attack.selectedStatuses)
     }
 
