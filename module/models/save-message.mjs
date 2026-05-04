@@ -239,7 +239,7 @@ export default class SaveMessageData extends BaseMessageData {
         }
 
         // Bouton point de chance
-        if (tr.saveHasLuckyPoints && !tr.isCritical) {
+        if (tr.saveHasLuckyPoints && !tr.isCritical && tr.isFailure) {
           const lpLink = document.createElement("a")
           lpLink.classList.add("lp-button-save-target")
           lpLink.dataset.targetUuid = tr.uuid
