@@ -2248,7 +2248,7 @@ export default class COActor extends Actor {
       await this.consumeAmmunition(item)
     }
 
-    return { results, selectedStatuses }
+    return { results, selectedStatuses, targetResults }
   }
 
   /**

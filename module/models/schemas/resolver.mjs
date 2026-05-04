@@ -173,8 +173,24 @@ export class Resolver extends foundry.abstract.DataModel {
     // Gestion des effets supplémentaires
     // Pour les jets opposés, les effets sont gérés via le message de chat (bouton "Appliquer DM" ou résolution du jet opposé)
     const isOpposedRoll = typeof this.skill.difficulty === "string" && this.skill.difficulty.includes("@oppose")
-    if (this.additionalEffect.active && !isOpposedRoll && Resolver.shouldManageAdditionalEffect(attack.results[0], this.additionalEffect)) {
-      await this._manageAdditionalEffect(actor, item, action, attack.selectedStatuses)
+    if (this.additionalEffect.active && !isOpposedRoll) {
+      // Multi-cibles : vérifier la condition par cible et n'appliquer qu'aux cibles éligibles
+      if (attack.targetResults?.length > 0) {
+        const globalResult = attack.results[0]
+        const eligible = attack.targetResults.filter((tr) => {
+          if (tr.needsOppositeRoll) return false
+          const result = { ...tr, total: globalResult.total, isSuccessThreshold: globalResult.isSuccessThreshold }
+          return Resolver.shouldManageAdditionalEffect(result, this.additionalEffect)
+        })
+        if (eligible.length > 0) {
+          const filteredTargets = eligible.map((tr) => ({ uuid: tr.uuid, name: tr.name, actor: fromUuidSync(tr.uuid) })).filter((t) => t.actor)
+          await this._manageAdditionalEffect(actor, item, action, attack.selectedStatuses, filteredTargets)
+        }
+      }
+      // Pas de cibles ou cible unique sans targetResults : utiliser le résultat global
+      else if (Resolver.shouldManageAdditionalEffect(attack.results[0], this.additionalEffect)) {
+        await this._manageAdditionalEffect(actor, item, action, attack.selectedStatuses)
+      }
     }
 
     return true
@@ -424,7 +440,7 @@ export class Resolver extends foundry.abstract.DataModel {
    * // Exemple d'utilisation :
    * await _manageAdditionalEffect(actor, item, action);
    */
-  async _manageAdditionalEffect(actor, item, action, selectedStatuses = null) {
+  async _manageAdditionalEffect(actor, item, action, selectedStatuses = null, filteredTargets = null) {
     // Si pas de combat, pas d'effet sur la durée
     if (
       (!game.combat || !game.combat.started) &&
@@ -442,10 +458,15 @@ export class Resolver extends foundry.abstract.DataModel {
       const ceSelf = await this._createCustomEffect(actor, item, action, true, selectedStatuses)
       await actor.applyCustomEffect(ceSelf)
     } else {
-      // Aucune cible est considérée comme Unique cible
-      let targetType = this.target.type
-      if (this.target.type === SYSTEM.RESOLVER_TARGET.none.id) targetType = SYSTEM.RESOLVER_TARGET.single.id
-      const targets = actor.acquireTargets(targetType, this.target.scope, this.target.number, action.name)
+      // Utiliser les cibles pré-filtrées si fournies, sinon acquérir depuis le canvas
+      let targets
+      if (filteredTargets) {
+        targets = filteredTargets
+      } else {
+        let targetType = this.target.type
+        if (this.target.type === SYSTEM.RESOLVER_TARGET.none.id) targetType = SYSTEM.RESOLVER_TARGET.single.id
+        targets = actor.acquireTargets(targetType, this.target.scope, this.target.number, action.name)
+      }
       const uuidList = targets.map((t) => t.uuid)
 
       // Créer l'effet pour les autres
