@@ -128,7 +128,7 @@ export default class SaveMessageData extends BaseMessageData {
 
     const details = document.createElement("details")
     details.classList.add("targets-collapsible")
-    details.open = true
+    details.open = !hasDmg || !message.system.dmgApplied
 
     const summary = document.createElement("summary")
     summary.classList.add("targets-header")
