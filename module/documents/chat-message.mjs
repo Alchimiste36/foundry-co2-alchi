@@ -138,11 +138,13 @@ export default class COChatMessage extends ChatMessage {
    * @static
    * @async
    */
-  static async _handleQueryUpdateTargetResults({ existingMessageId, targetResults, effectsApplied } = {}) {
+  static async _handleQueryUpdateTargetResults({ existingMessageId, targetResults, effectsApplied, customEffect, additionalEffect } = {}) {
     const message = game.messages.get(existingMessageId)
     if (!message) return
     const updateData = { "system.targetResults": targetResults }
     if (effectsApplied) updateData["system.effectsApplied"] = true
+    if (customEffect) updateData["system.customEffect"] = customEffect
+    if (additionalEffect) updateData["system.additionalEffect"] = additionalEffect
     await message.update(updateData)
   }
 }

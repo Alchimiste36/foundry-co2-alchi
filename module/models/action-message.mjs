@@ -247,10 +247,14 @@ export default class ActionMessageData extends BaseMessageData {
                       return dtr
                     })
                     const dmgUpdateData = { "system.targetResults": updatedDamageTargetResults }
+                    if (message.system.customEffect && message.system.additionalEffect?.active && !damageMessage.system.customEffect) {
+                      dmgUpdateData["system.customEffect"] = message.system.customEffect
+                      dmgUpdateData["system.additionalEffect"] = message.system.additionalEffect
+                    }
                     if (game.user.isGM) {
                       await damageMessage.update(dmgUpdateData)
                     } else {
-                      await game.users.activeGM.query("co2.updateTargetResults", { existingMessageId: damageMessage.id, targetResults: updatedDamageTargetResults })
+                      await game.users.activeGM.query("co2.updateTargetResults", { existingMessageId: damageMessage.id, targetResults: updatedDamageTargetResults, customEffect: dmgUpdateData["system.customEffect"], additionalEffect: dmgUpdateData["system.additionalEffect"] })
                     }
                   }
                 }
@@ -259,6 +263,10 @@ export default class ActionMessageData extends BaseMessageData {
                 const damageRoll = Roll.fromData(message.system.linkedRoll)
                 const damageSystem = { subtype: "damage" }
                 if (currentTargetResults.length > 0) damageSystem.targetResults = newTargetResults
+                if (message.system.customEffect && message.system.additionalEffect?.active) {
+                  damageSystem.customEffect = message.system.customEffect
+                  damageSystem.additionalEffect = message.system.additionalEffect
+                }
                 await damageRoll.toMessage(
                   { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: damageSystem, speaker: message.speaker },
                   { messageMode: rolls[0].options.rollMode },
@@ -267,11 +275,12 @@ export default class ActionMessageData extends BaseMessageData {
             }
 
             // Gestion des custom effects
-            // Pour les jets opposés, les effets sont gérés via le message de dégâts (bouton "Appliquer DM" ou résolution du jet opposé)
+            // Les effets sont gérés via le message de dégâts (bouton "Appliquer DM") quand un tel message existe
             const hasOpposedRoll = !!message.system.oppositeValue
             const customEffect = message.system.customEffect
             const additionalEffect = message.system.additionalEffect
-            if (customEffect && additionalEffect && additionalEffect.active && !hasOpposedRoll && Resolver.shouldManageAdditionalEffect(newResult, additionalEffect)) {
+            const damageCardWillHandleEffect = hasOpposedRoll || (hasLinkedRoll && (!!message.system.linkedDamageMessageId || game.settings.get("co2", "useComboRolls")))
+            if (customEffect && additionalEffect && additionalEffect.active && !damageCardWillHandleEffect && Resolver.shouldManageAdditionalEffect(newResult, additionalEffect)) {
               const target = message.system.targets.length > 0 ? message.system.targets[0] : null
               if (target) {
                 const targetActor = fromUuidSync(target)
