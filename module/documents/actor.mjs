@@ -2086,6 +2086,22 @@ export default class COActor extends Actor {
       }))
     }
 
+    // Gestion des skillBonuses pour les attaques basées sur une caractéristique
+    let skillBonuses = []
+    let hasSkillBonuses = false
+    if (this.type === "character") {
+      const isCharacteristicAttack = !Utils.getAttackTypeFromFormula(originalSkillFormula, actionType)
+      if (isCharacteristicAttack) {
+        for (const [key] of Object.entries(this.system.abilities)) {
+          if (originalSkillFormula.includes(`@${key}`)) {
+            skillBonuses = this.getSkillBonuses(key)
+            break
+          }
+        }
+        hasSkillBonuses = skillBonuses.length > 0
+      }
+    }
+
     // Préparation des statuts disponibles pour l'effet additionnel
     let availableStatuses = []
     let hasAvailableStatuses = false
@@ -2138,6 +2154,9 @@ export default class COActor extends Actor {
       attackSuccessThreshold: attackSuccessThreshold,
       availableStatuses,
       hasAvailableStatuses,
+      skillBonuses,
+      hasSkillBonuses,
+      totalSkillBonuses: 0,
     }
 
     // Rolls contient le jet d'attaque et le jet de dommages si le type est "attack"

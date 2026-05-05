@@ -35,32 +35,55 @@
 {{/if}}
 
 {{#if (eq type 'attack')}}
-    <fieldset class="attack-roll-2">      
+    <fieldset class="attack-roll-2 {{#if hasSkillBonuses}}has-skill-bonuses{{/if}}">
     <div class="icone"><i class="fa-solid fa-dice-d20"></i></div>
     <div class="form-group">
-        <label data-tooltip="{{localize 'CO.tooltip.formulaAttack'}}">Jet d'Attaque</label>            
-        <div class="form-fields flex1">                    
+        <label data-tooltip="{{localize 'CO.tooltip.formulaAttack'}}">Jet d'Attaque</label>
+        <div class="form-fields flex1">
             <input class="field-value" id="formulaAttack" name="formulaAttack" type="text" value="{{formulaAttack}}" data-dtype="String" data-tooltip="{{formulaAttackTooltip}}" {{#if auto}}readonly{{/if}} />
-        </div>  
-    </div>    
+        </div>
+    </div>
     <div class="form-group">
-        <label class="textCenter">{{localize 'CO.label.long.bonus'}}</label>              
+        <label class="textCenter">{{localize 'CO.label.long.bonus'}}</label>
         <div class="form-fields" data-tooltip="Saisir un nombre positif">
             {{ numberInput skillBonus min=0 step=1 name="skillBonus" class="field-value textCenter"}}
         </div>
     </div>
-    <div class="form-group">           
-        <label class="textCenter">{{localize 'CO.label.long.malus'}}</label>                
-        <div class="form-fields" data-tooltip="Saisir un nombre négatif">                    
+    <div class="form-group">
+        <label class="textCenter">{{localize 'CO.label.long.malus'}}</label>
+        <div class="form-fields" data-tooltip="Saisir un nombre négatif">
             {{ numberInput skillMalus max=0 step=1 name="skillMalus" class="field-value textCenter"}}
         </div>
-    </div> 
-    <div class="form-group">         
-        <label class="textCenter">{{localize 'CO.label.long.critrange'}}</label> 
-        <div class="form-fields" data-tooltip="{{criticalTooltip}}">                    
+    </div>
+    {{#if hasSkillBonuses}}
+    <div class="form-group">
+        <label class="textCenter">Compétences</label>
+        <div class="form-fields">
+            <input class="field-value textCenter" id="totalSkillBonuses" name="totalSkillBonuses" type="text" value="{{numberFormat totalSkillBonuses sign=true}}" data-dtype="Number" />
+        </div>
+    </div>
+    {{/if}}
+    <div class="form-group">
+        <label class="textCenter">{{localize 'CO.label.long.critrange'}}</label>
+        <div class="form-fields" data-tooltip="{{criticalTooltip}}">
             <input class="field-value textCenter" id="critical" name="critical" type="text" value="{{critical}}" data-dtype="String" {{#if auto}}readonly{{/if}}/>
-        </div>           
-    </div>         
+        </div>
+    </div>
+    {{#if hasSkillBonuses}}
+        <div class="skillBonuses">
+            <div class="flex1 skill-bonuses" id="skill-bonuses">
+            {{#each skillBonuses as |bonus id|}}
+                <div class="bonus-item flexrow" data-value="{{bonus.value}}">
+                  <span class="bonus-value flex0">{{numberFormat bonus.value decimals=0 sign=true}}</span>
+                  <div class="bonus-description">
+                    <span class="bonus-name flex1">{{bonus.name}} {{#if bonus.hasPathName}}({{bonus.pathName}}){{/if}}</span>
+                    <span class="bonus-name flex2">{{bonus.additionalInfos}}</span>
+                  </div>
+                </div>
+            {{/each}}
+            </div>
+        </div>
+    {{/if}}
     </fieldset>
 {{/if}}
         

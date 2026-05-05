@@ -353,7 +353,7 @@ export class COAttackRoll extends CORoll {
 
       rollContext = await foundry.applications.api.DialogV2.wait({
         window: { title: dialogContext.title },
-        position: { width: 700 },
+        position: { width: dialogContext.hasSkillBonuses ? 780 : 700 },
         classes: this.ROLL_CSS,
         content,
         rejectClose: false,
@@ -478,6 +478,20 @@ export class COAttackRoll extends CORoll {
               }
             })
           })
+          // Skill bonuses (pour les attaques basées sur une caractéristique)
+          const bonusItems = dialog.element.querySelectorAll(".bonus-item")
+          if (bonusItems.length > 0) {
+            bonusItems.forEach((input) => {
+              input.addEventListener("click", (event) => {
+                const item = event.currentTarget.closest(".bonus-item")
+                item.classList.toggle("checked")
+                const parent = event.currentTarget.closest(".skill-bonuses")
+                const checkedBonuses = Array.from(parent.querySelectorAll(".bonus-item.checked"))
+                const total = checkedBonuses.reduce((acc, curr) => acc + parseInt(curr.dataset.value), 0)
+                dialog.element.querySelector("#totalSkillBonuses").value = `${total >= 0 ? "+" : ""}${total}`
+              })
+            })
+          }
           // Dommages temporaires
           const tempDamageCb = dialog.element.querySelector('input[name="tempDamage"]')
           const radioButtons = dialog.element.querySelectorAll('input[type="radio"]')
@@ -494,9 +508,12 @@ export class COAttackRoll extends CORoll {
     }
 
     if (dialogContext.type === "attack") {
-      const formula = withDialog
-        ? Utils.evaluateFormulaCustomValues(dialogContext.actor, `${rollContext.formulaAttack}+${rollContext.skillBonus}+${rollContext.skillMalus}`)
-        : Utils.evaluateFormulaCustomValues(dialogContext.actor, `${dialogContext.formulaAttack}+${dialogContext.skillBonus}+${dialogContext.skillMalus}`)
+      let formulaStr = withDialog
+        ? `${rollContext.formulaAttack}+${rollContext.skillBonus}+${rollContext.skillMalus}`
+        : `${dialogContext.formulaAttack}+${dialogContext.skillBonus}+${dialogContext.skillMalus}`
+      const totalSkillBonuses = parseInt(withDialog ? rollContext.totalSkillBonuses : dialogContext.totalSkillBonuses) || 0
+      if (totalSkillBonuses) formulaStr += `${totalSkillBonuses > 0 ? "+" : ""}${totalSkillBonuses}`
+      const formula = Utils.evaluateFormulaCustomValues(dialogContext.actor, formulaStr)
 
       const roll = new this(formula, dialogContext.actor.getRollData())
       await roll.evaluate()

@@ -38,6 +38,52 @@
       padding-bottom: 6px;
       border-bottom: 2px solid #ad0606;
       gap: 0;
+      &.has-skill-bonuses {
+        grid-template-columns: 0.5fr 3fr 0.8fr 0.8fr 0.8fr 1.2fr;
+      }
+    }
+    .skillBonuses {
+      grid-column: 1 / -1;
+      padding-top: 6px;
+    }
+    .flex1.skill-bonuses {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-bottom: 3px;
+    }
+    .bonus-description {
+      display: flex;
+      flex-direction: column;
+    }
+    .bonus-value.flex0 {
+      font-size: 25px;
+      font-weight: bolder;
+      padding-right: 10px;
+      padding-left: 0px;
+    }
+    .bonus-name.flex1 {
+      font-size: 15px;
+      font-weight: bold;
+      padding-right: 5px;
+    }
+    .bonus-name.flex2 {
+      font-style: italic;
+      padding-right: 5px;
+      margin-left: 10px;
+    }
+    .bonus-item.flexrow {
+      border: 2px solid grey;
+      padding: 5px;
+      margin: 5px;
+      background-color: #ffffff57;
+      cursor: pointer;
+    }
+    .bonus-item.flexrow.checked {
+      color: #b3b4b5;
+      padding: 5px;
+      margin: 5px;
+      border: 2px solid #b3b4b5;
+      background-color: #5d142b;
     }
     .rollDommages {
       display: grid;
