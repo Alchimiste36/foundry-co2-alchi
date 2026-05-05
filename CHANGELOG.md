@@ -1,3 +1,5 @@
+# 2.1.0
+
 # 2.0.2
 ## Corrections
 - Corrige le retour à la ligne automatique manquant dans les descriptions
