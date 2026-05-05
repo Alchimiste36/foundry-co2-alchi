@@ -157,11 +157,10 @@ export default class OpposedRollHandler {
    * @param {string} params.linkedDamageMessageId ID du message de dommages
    * @param {Array} params.targetResults Résultats par cible (toutes les cibles)
    */
-  static async updateDamageMessageTargets({ linkedDamageMessageId, targetResults, luckyPointSuppressEffects }) {
+  static async updateDamageMessageTargets({ linkedDamageMessageId, targetResults }) {
     if (!linkedDamageMessageId) return
     const resolvedTargets = targetResults.filter((tr) => !tr.needsOppositeRoll)
     const updateData = { "system.targetResults": resolvedTargets }
-    if (luckyPointSuppressEffects) updateData["system.luckyPointSuppressEffects"] = true
     if (game.user.isGM) {
       const damageMessage = game.messages.get(linkedDamageMessageId)
       if (damageMessage) await damageMessage.update(updateData)
@@ -169,7 +168,6 @@ export default class OpposedRollHandler {
       await game.users.activeGM.query("co2.updateTargetResults", {
         existingMessageId: linkedDamageMessageId,
         targetResults: resolvedTargets,
-        luckyPointSuppressEffects: luckyPointSuppressEffects || undefined,
       })
     }
   }
