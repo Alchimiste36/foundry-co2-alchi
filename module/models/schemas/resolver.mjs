@@ -44,6 +44,7 @@ export class Resolver extends foundry.abstract.DataModel {
       saveAbility: new fields.StringField({ required: false, choices: SYSTEM.ABILITIES, initial: undefined }),
       saveDifficulty: new fields.StringField({ required: false, nullable: false, initial: undefined }), // Peut être une formule
       // Ajout des seuils de succès automatiques
+      halfDmgOnSave: new fields.BooleanField({ initial: true }),
       hasAttackSuccessThreshold: new fields.BooleanField({ initial: false }), // Si true alors on a un seuil de succès auto
       attackSuccessThreshold: new fields.NumberField({ integer: true, positive: true }), // Le seuil minimum pour faire un succes auto (ex : 15 pour 15-20)
     }
@@ -79,6 +80,33 @@ export class Resolver extends foundry.abstract.DataModel {
     }
   }
 
+  hasOptionalTargets() {
+    return (
+      this.target.type === SYSTEM.RESOLVER_TARGET.none.id ||
+      (this.target.type === SYSTEM.RESOLVER_TARGET.single.id && this.target.number === 0)
+    )
+  }
+
+  getOptionalTargetCount() {
+    return canvas.tokens?.placeables?.length ?? 999
+  }
+
+  getResolverTargets(actor, actionName, { allowTargetDependentDifficulty = false, difficultyFormula = "" } = {}) {
+    const hasOptionalTargets = this.hasOptionalTargets()
+    const hasTargetDependentDifficulty =
+      allowTargetDependentDifficulty && typeof difficultyFormula === "string" && (difficultyFormula.includes("@cible") || difficultyFormula.includes("@oppose"))
+
+    if (hasOptionalTargets && hasTargetDependentDifficulty) {
+      return actor.acquireTargets(SYSTEM.RESOLVER_TARGET.multiple.id, SYSTEM.RESOLVER_SCOPE.all.id, this.getOptionalTargetCount(), actionName)
+    }
+
+    return actor.acquireTargets(this.target.type, this.target.scope, this.target.number, actionName)
+  }
+
+  shouldWarnMissingTargets(targets) {
+    return !this.hasOptionalTargets() && targets.length === 0 && (this.target.type === SYSTEM.RESOLVER_TARGET.single.id || this.target.type === SYSTEM.RESOLVER_TARGET.multiple.id)
+  }
+
   /**
    * Resolver pour les actions de type Attaque
    * @param {COActor} actor : l'acteur pour lequel s'applique l'action
@@ -107,13 +135,13 @@ export class Resolver extends foundry.abstract.DataModel {
 
     // Gestion des cibles
     let targets = []
-    // Si le type de cible est none et que la formule de la difficulté contient @cible, on considère que c'est une unique cible
-    if (this.target.type === SYSTEM.RESOLVER_TARGET.none.id && this.skill.difficulty.includes("@cible")) {
-      targets = actor.acquireTargets(SYSTEM.RESOLVER_TARGET.single.id, SYSTEM.RESOLVER_SCOPE.all.id, 1, action.actionName)
-    } else {
-      targets = actor.acquireTargets(this.target.type, this.target.scope, this.target.number, action.actionName)
-    }
-    if (targets.length === 0 && (this.target.type === SYSTEM.RESOLVER_TARGET.single.id || this.target.type === SYSTEM.RESOLVER_TARGET.multiple.id)) {
+    const hasOptionalTargets = this.hasOptionalTargets()
+    const effectiveTargetType = hasOptionalTargets ? SYSTEM.RESOLVER_TARGET.none.id : this.target.type
+
+    // Pour une action sans cible imposée, on autorise librement 0 à x cibles sélectionnées par l'utilisateur.
+    targets = this.getResolverTargets(actor, action.actionName, { allowTargetDependentDifficulty: true, difficultyFormula: this.skill.difficulty })
+
+    if (this.shouldWarnMissingTargets(targets)) {
       ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
       return false
     }
@@ -138,11 +166,31 @@ export class Resolver extends foundry.abstract.DataModel {
       additionalEffect: this.additionalEffect,
       hasAttackSuccessThreshold: this.hasAttackSuccessThreshold,
       attackSuccessThreshold: this.attackSuccessThreshold,
+      targetType: effectiveTargetType,
+      targets: targets,
     })
     if (!attack) return false
     // Gestion des effets supplémentaires
-    if (this.additionalEffect.active && Resolver.shouldManageAdditionalEffect(attack.results[0], this.additionalEffect)) {
-      await this._manageAdditionalEffect(actor, item, action, attack.selectedStatuses)
+    // Pour les jets opposés, les effets sont gérés via le message de chat (bouton "Appliquer DM" ou résolution du jet opposé)
+    const isOpposedRoll = typeof this.skill.difficulty === "string" && this.skill.difficulty.includes("@oppose")
+    if (this.additionalEffect.active && !isOpposedRoll) {
+      // Multi-cibles : vérifier la condition par cible et n'appliquer qu'aux cibles éligibles
+      if (attack.targetResults?.length > 0) {
+        const globalResult = attack.results[0]
+        const eligible = attack.targetResults.filter((tr) => {
+          if (tr.needsOppositeRoll) return false
+          const result = { ...tr, total: globalResult.total, isSuccessThreshold: globalResult.isSuccessThreshold }
+          return Resolver.shouldManageAdditionalEffect(result, this.additionalEffect)
+        })
+        if (eligible.length > 0) {
+          const filteredTargets = eligible.map((tr) => ({ uuid: tr.uuid, name: tr.name, actor: fromUuidSync(tr.uuid) })).filter((t) => t.actor)
+          await this._manageAdditionalEffect(actor, item, action, attack.selectedStatuses, filteredTargets)
+        }
+      }
+      // Pas de cibles ou cible unique sans targetResults : utiliser le résultat global
+      else if (Resolver.shouldManageAdditionalEffect(attack.results[0], this.additionalEffect)) {
+        await this._manageAdditionalEffect(actor, item, action, attack.selectedStatuses)
+      }
     }
 
     return true
@@ -180,8 +228,8 @@ export class Resolver extends foundry.abstract.DataModel {
     // Gestion des dommages automatiques uniquement si la formule est définie
     if (this.dmg.formula && this.dmg.formula !== "" && this.dmg.formula !== "0") {
       // Gestion des cibles
-      const targets = actor.acquireTargets(this.target.type, this.target.scope, this.target.number, action.actionName)
-      if (targets.length === 0 && (this.target.type === SYSTEM.RESOLVER_TARGET.single.id || this.target.type === SYSTEM.RESOLVER_TARGET.multiple.id)) {
+      const targets = this.getResolverTargets(actor, action.actionName)
+      if (this.shouldWarnMissingTargets(targets)) {
         ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
         return false
       }
@@ -196,7 +244,7 @@ export class Resolver extends foundry.abstract.DataModel {
         damageFormulaTooltip,
         bonusDice: this.bonusDiceAdd === true ? 1 : 0,
         malusDice: this.malusDiceAdd === true ? 1 : 0,
-        targetType: this.target.type,
+        targetType: this.hasOptionalTargets() ? SYSTEM.RESOLVER_TARGET.none.id : this.target.type,
         targets: targets,
       })
       if (!attack) return false
@@ -224,8 +272,8 @@ export class Resolver extends foundry.abstract.DataModel {
     let healFormulaEvaluated = Roll.replaceFormulaData(healFormula, actor.getRollData())
 
     // Gestion des cibles
-    const targets = actor.acquireTargets(this.target.type, this.target.scope, this.target.number, action.actionName)
-    if (targets.length === 0 && (this.target.type === SYSTEM.RESOLVER_TARGET.single.id || this.target.type === SYSTEM.RESOLVER_TARGET.multiple.id)) {
+    const targets = this.getResolverTargets(actor, action.actionName)
+    if (this.shouldWarnMissingTargets(targets)) {
       ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
       return false
     }
@@ -235,7 +283,7 @@ export class Resolver extends foundry.abstract.DataModel {
     const heal = await actor.rollHeal(item, {
       actionName: action.label,
       healFormula: healFormulaEvaluated,
-      targetType: this.target.type,
+      targetType: this.hasOptionalTargets() ? SYSTEM.RESOLVER_TARGET.none.id : this.target.type,
       targets: targets,
     })
     if (!heal) return false
@@ -259,7 +307,6 @@ export class Resolver extends foundry.abstract.DataModel {
     const saveAbility = this.saveAbility
 
     let difficultyFormula = this.saveDifficulty
-    // Modification pour prendre en compte tous les cas possible de formule et pour calculer un total avec jet de dé si dé présent
     difficultyFormula = Utils.evaluateCoModifierWithDiceValue(actor, difficultyFormula, item.uuid)
     const resultat = await new Roll(difficultyFormula).evaluate()
     difficultyFormula = resultat.total.toString()
@@ -269,17 +316,45 @@ export class Resolver extends foundry.abstract.DataModel {
     const displayDifficulty = game.settings.get("co2", "displayDifficulty")
     showDifficulty = displayDifficulty === "all" || (displayDifficulty === "gm" && game.user.isGM)
 
+    // Jet de dommages si une formule est définie
+    let dmgRoll = null
+    let dmgTotal = null
+    let dmgFormula = null
+    let dmgTooltip = null
+    const hasDmgFormula = this.dmg?.formula && this.dmg.formula !== "" && this.dmg.formula !== "0"
+    if (hasDmgFormula) {
+      let damageFormula = this.dmg.formula
+      damageFormula = Utils.evaluateFormulaCustomValues(actor, damageFormula, item.uuid)
+      damageFormula = Roll.replaceFormulaData(damageFormula, actor.getRollData())
+      dmgRoll = await new CORoll(damageFormula).evaluate()
+      dmgTotal = dmgRoll.total
+      dmgFormula = damageFormula
+      dmgTooltip = await dmgRoll.getTooltip()
+    }
+
     // Création de l'éventuel custom effect
     let customEffect
     if (this.additionalEffect.active) {
       customEffect = await this._createCustomEffect(actor, item, action)
     }
 
-    // Gestion des cibles
-    const targets = actor.acquireTargets(this.target.type, this.target.scope, this.target.number, action.actionName)
-    if (targets.length === 0 && (this.target.type === SYSTEM.RESOLVER_TARGET.single.id || this.target.type === SYSTEM.RESOLVER_TARGET.multiple.id)) {
-      ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
-      return false
+    // Gestion des cibles — pour une sauvegarde, "aucune cible" est traitée comme "cible unique"
+    let targets
+    let effectiveTargetType
+    if (this.target.type === SYSTEM.RESOLVER_TARGET.none.id) {
+      effectiveTargetType = SYSTEM.RESOLVER_TARGET.single.id
+      targets = actor.acquireTargets(effectiveTargetType, this.target.scope, 1, action.actionName)
+      if (targets.length === 0) {
+        ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
+        return false
+      }
+    } else {
+      effectiveTargetType = this.hasOptionalTargets() ? SYSTEM.RESOLVER_TARGET.none.id : this.target.type
+      targets = this.getResolverTargets(actor, action.actionName)
+      if (this.shouldWarnMissingTargets(targets)) {
+        ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
+        return false
+      }
     }
 
     if (CONFIG.debug.co2?.resolvers) console.debug(Utils.log("Resolver save - Targets", targets))
@@ -288,20 +363,20 @@ export class Resolver extends foundry.abstract.DataModel {
       actionName: action.label,
       ability: saveAbility,
       difficulty: difficultyFormulaEvaluated,
+      difficultyFormula: this.saveDifficulty,
       showDifficulty,
-      targetType: this.target.type,
+      targetType: effectiveTargetType,
       targets: targets,
       customEffect,
       additionalEffect: this.additionalEffect,
+      dmgRoll,
+      dmgTotal,
+      dmgFormula,
+      dmgTooltip,
+      halfDmgOnSave: this.halfDmgOnSave,
     })
     if (!save) return false
 
-    // TODO Effet supplémentaire ici ?
-    /* Gestion des effets supplémentaires
-    if (this.additionalEffect.active && this.additionalEffect.applyOn === SYSTEM.RESOLVER_RESULT.always.id) {
-      await this._manageAdditionalEffect(actor, item, action)
-    }
-    */
     return true
   }
 
@@ -314,7 +389,7 @@ export class Resolver extends foundry.abstract.DataModel {
    * @param {Action} action : l'action
    */
   async buffDebuff(actor, item, action) {
-    if (action.modifiers && action.modifiers.length > 0 && this.additionalEffect.active && this.additionalEffect.applyOn === SYSTEM.RESOLVER_RESULT.always.id) {
+    if (this.additionalEffect.active && this.additionalEffect.applyOn === SYSTEM.RESOLVER_RESULT.always.id) {
       return await this._manageAdditionalEffect(actor, item, action)
     } else {
       return false
@@ -344,7 +419,7 @@ export class Resolver extends foundry.abstract.DataModel {
    * @param {Actor} actor L'acteur sur lequel l'effet sera appliqué.
    * @param {Item} item L'objet déclenchant l'effet supplémentaire.
    * @param {Object} action L'action contenant les modificateurs et autres données pertinentes.
-   * @param selectedStatuses {Array|null} Un tableau de statuts sélectionnés par l'utilisateur, ou null pour utiliser les statuts configurés.
+   * @param {Array|null} selectedStatuses Un tableau de statuts sélectionnés par l'utilisateur, ou null pour utiliser les statuts configurés.
    * @returns {Promise<bool>} Résout lorsque l'effet a été appliqué avec succès.
    *
    *
@@ -365,7 +440,7 @@ export class Resolver extends foundry.abstract.DataModel {
    * // Exemple d'utilisation :
    * await _manageAdditionalEffect(actor, item, action);
    */
-  async _manageAdditionalEffect(actor, item, action, selectedStatuses = null) {
+  async _manageAdditionalEffect(actor, item, action, selectedStatuses = null, filteredTargets = null) {
     // Si pas de combat, pas d'effet sur la durée
     if (
       (!game.combat || !game.combat.started) &&
@@ -383,10 +458,15 @@ export class Resolver extends foundry.abstract.DataModel {
       const ceSelf = await this._createCustomEffect(actor, item, action, true, selectedStatuses)
       await actor.applyCustomEffect(ceSelf)
     } else {
-      // Aucune cible est considérée comme Unique cible
-      let targetType = this.target.type
-      if (this.target.type === SYSTEM.RESOLVER_TARGET.none.id) targetType = SYSTEM.RESOLVER_TARGET.single.id
-      const targets = actor.acquireTargets(targetType, this.target.scope, this.target.number, action.name)
+      // Utiliser les cibles pré-filtrées si fournies, sinon acquérir depuis le canvas
+      let targets
+      if (filteredTargets) {
+        targets = filteredTargets
+      } else {
+        let targetType = this.target.type
+        if (this.target.type === SYSTEM.RESOLVER_TARGET.none.id) targetType = SYSTEM.RESOLVER_TARGET.single.id
+        targets = actor.acquireTargets(targetType, this.target.scope, this.target.number, action.name)
+      }
       const uuidList = targets.map((t) => t.uuid)
 
       // Créer l'effet pour les autres

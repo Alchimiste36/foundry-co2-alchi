@@ -1,58 +1,94 @@
 {{log "Chroniques Oubliées | hbs | damage-card" this}}
-<div class="co chat-card roll-card damage-card" data-actor-id="{{actorId}}">
+<div class="co chat-card roll-card damage-card" data-actor-id="{{actorId}}" data-total="{{total}}">
   <header class="card-header flexcol">
-    <div class="type-card"><label><i class="fa-solid fa-raindrops" data-tooltip="{{localize 'CO.label.long.damage'}}" data-tooltip-direction="LEFT"></i></label></div>
-    <div class="action-name" data-tooltip="{{flavor}}" data-tooltip-direction="LEFT">{{flavor}}</div>
+    <details class="card-details damage-details">
+      <summary>
+        <div class="card-item-card damage-item-card" data-tooltip="{{flavor}}" data-tooltip-direction="LEFT">
+          {{#if itemImg}}
+            <img class="card-item-image" src="{{itemImg}}" alt="{{itemName}}" />
+          {{/if}}
+          <div class="card-item-text">
+            <div class="card-item-name">{{itemName}}</div>
+            {{#if actionName}}
+              <div class="card-item-subtitle">{{actionName}}</div>
+            {{/if}}
+          </div>
+        </div>
+      </summary>
+      <div class="card-details-content">
+        <div class="dice-roll" data-action="expandRoll">
+          <div class="dice-result">
+            <div class="dice-formula" data-tooltip="{{formulaDamageTooltip}}" data-tooltip-direction="UP">{{localize "CO.ui.formula"}} : {{formula}}</div>
+            {{{tooltip}}}
+          </div>
+        </div>
+      </div>
+    </details>
   </header>
 
   <div class="card-content">
     <section class="result">
-      <div class="form-group total-result">
-
-        <div>{{total}} <label>DM</label></div>
-      </div>
-      <div class="damage-part">
-        <div class="damage-buttons">
+      <div class="damage-total-group">
+        <div class="form-group total-result">
+          <div>{{total}}</div><div class="dm-text"> DM</div>
+        </div>
+        <div class="damage-options">
           <div class="temp-dm">
             <label for="tempDm" class="temp-dm-checkbox" data-tooltip="{{localize 'CO.ui.tempText'}}" data-tooltip-direction="UP">{{localize 'CO.ui.temp'}}</label>
             <input type="checkbox" id="tempDm" name="tempDm" class="temp-dm-checkbox" {{checked tempDamage}} />
           </div>
-          <div class="dr">
-            <label for="dr" class="dr-checkbox" data-tooltip="{{localize 'CO.ui.drText'}}" data-tooltip-direction="UP">{{localize "CO.ui.dr"}}</label>
-            <input type="checkbox" id="dr" name="dr" class="dr-checkbox" checked />
-          </div>
-          <div>
-            <a class="btn apply-dmg" data-actor-id="{{actorId}}" data-source-label="{{flavor}}" data-apply="full" data-total="{{total}}" data-tempdamage={{tempDamage}}>
-              <i class="fas fa-user-minus" data-tooltip="{{localize 'CO.ui.applyDamage'}}" data-tooltip-direction="UP"></i>
-            </a>
-          </div>
-          <div>
-            <a class="btn apply-dmg" data-actor-id="{{actorId}}" data-source-label="{{flavor}}" data-apply="half" data-total="{{total}}" data-tempdamage={{tempDamage}}>
-              <i class="fas fa-user-shield" data-tooltip="{{localize 'CO.ui.applyHalfDamage'}}" data-tooltip-direction="UP"></i>
-            </a>
-          </div>
-          <div>
-            <a class="btn apply-dmg" data-actor-id="{{actorId}}" data-source-label="{{flavor}}" data-apply="double" data-total="{{total}}" data-tempdamage={{tempDamage}}>
-              <i class="fas fa-user-injured" data-tooltip="{{localize 'CO.ui.applyDoubleDamage'}}" data-tooltip-direction="UP"></i>
-            </a>
-          </div>
-          <div>
-            <a class="btn apply-dmg" data-actor-id="{{actorId}}" data-source-label="{{flavor}}" data-apply="heal" data-total="{{total}}">
-              <i class="fas fa-user-plus" data-tooltip="{{localize 'CO.ui.applyHealing'}}" data-tooltip-direction="UP"></i>
-            </a>
-          </div>
         </div>
       </div>
+    </section>
+    <section class="targets">
+      <details class="targets-collapsible apply-collapsible">
+        <summary class="targets-header apply-header"><i class="fa-solid fa-heart"></i> {{localize "CO.ui.apply"}}</summary>
+        <div class="apply-content">
+          <div class="apply-source-control">
+            {{#if hasTargetResults}}
+              <button type="button" class="apply-mode-btn active" data-mode="targeted"><i class="fa-solid fa-bullseye"></i> {{localize "CO.ui.targeted"}}</button>
+            {{/if}}
+            <button type="button" class="apply-mode-btn {{#unless hasTargetResults}}active{{/unless}}" data-mode="selected"><i class="fa-solid fa-expand"></i> {{localize "CO.ui.selected"}}</button>
+          </div>
+
+          <div class="apply-target-list" data-active-mode="{{#if hasTargetResults}}targeted{{else}}selected{{/if}}">
+            {{#if hasTargetResults}}
+              {{#each targetResults as |target|}}
+                <div class="apply-target-row" data-target-uuid="{{target.uuid}}" data-source="targeted">
+                  <div class="target-info">
+                    {{#if target.img}}
+                      <img class="target-portrait" src="{{target.img}}" alt="{{target.name}}" height="28" width="28" />
+                    {{/if}}
+                    <span class="target-name">{{target.name}}</span>
+                    
+                    <span class="target-damage" data-multiplier="{{#if target.isFailure}}0{{else if target.isCritical}}2{{else}}1{{/if}}">{{#if target.isFailure}}0{{else}}-{{../total}}{{/if}}</span>
+                  </div>
+                  <div class="target-controls">
+
+                    <div class="damage-multipliers">
+                      <label class="target-dr-label" data-tooltip="{{localize 'CO.ui.drText'}}" data-tooltip-direction="UP">
+                        {{localize "CO.ui.dr"}}
+                        <input type="checkbox" class="target-dr" checked />
+                      </label>
+                      <button type="button" class="multiplier-btn btn-heal" data-multiplier="-1" data-tooltip="{{localize 'CO.ui.applyHealing'}}" data-tooltip-direction="DOWN"><i class="fa-solid fa-heart"></i></button>
+                      <button type="button" class="multiplier-btn {{#if target.isFailure}}active{{/if}}" data-multiplier="0" data-tooltip="{{localize 'CO.ui.noDamage'}}" data-tooltip-direction="DOWN">0</button>
+                      <button type="button" class="multiplier-btn" data-multiplier="0.5" data-tooltip="{{localize 'CO.ui.applyHalfDamage'}}" data-tooltip-direction="DOWN">x&frac12;</button>
+                      <button type="button" class="multiplier-btn {{#if target.isCritical}}{{else}}{{#unless target.isFailure}}active{{/unless}}{{/if}}" data-multiplier="1" data-tooltip="{{localize 'CO.ui.applyDamage'}}" data-tooltip-direction="DOWN">x1</button>
+                      <button type="button" class="multiplier-btn {{#if target.isCritical}}active{{/if}}" data-multiplier="2" data-tooltip="{{localize 'CO.ui.applyDoubleDamage'}}" data-tooltip-direction="DOWN">x2</button>
+                    </div>
+                  </div>
+                </div>
+              {{/each}}
+            {{/if}}
+          </div>
+
+          <button type="button" class="apply-damage-btn">{{localize "CO.ui.apply"}}</button>
+        </div>
+      </details>
     </section>
   </div>
 
   <footer class="card-footer">
-    <div class="dice-roll" data-action="expandRoll">
-      <div class="dice-result">
-        <div class="dice-formula" data-tooltip="{{formulaDamageTooltip}}" data-tooltip-direction="UP">{{localize "CO.ui.formula"}} : {{formula}}</div>
-        {{{tooltip}}}
-      </div>
-    </div>
   </footer>
 
 </div>

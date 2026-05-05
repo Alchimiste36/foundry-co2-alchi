@@ -261,10 +261,15 @@ export class COSkillRoll extends CORoll {
   async _prepareChatRenderContext({ flavor, isPrivate = false, ...options } = {}) {
     const rollResults = CORoll.analyseRollResult(this)
     // On peut utiliser un point de chance si on en a et que ce n'est pas déjà un critique
-    const canUseLuckyPoints = this.options.hasLuckyPoints && !rollResults.isCritical
-    // Libellé de la caractéristique opposée (ex : "Constitution")
+    // Si la difficulté est visible par tous, on n'affiche le bouton que sur un échec
+    const displayDifficulty = game.settings.get("co2", "displayDifficulty")
+    const canUseLuckyPoints = this.options.hasLuckyPoints && !rollResults.isCritical && (displayDifficulty === "gm" || rollResults.isFailure)
+    // Libellé de la caractéristique opposée (ex : "Constitution", "Attaque de contact")
     const oppositeAbilityId = this.options.oppositeValue?.startsWith("@oppose.") ? this.options.oppositeValue.replace("@oppose.", "") : null
-    const oppositeAbilityLabel = oppositeAbilityId ? game.i18n.localize(`CO.abilities.long.${oppositeAbilityId}`) : null
+    const COMBAT_STAT_MAP = { atc: "melee", atd: "ranged", atm: "magic" }
+    const oppositeAbilityLabel = oppositeAbilityId
+      ? game.i18n.localize(COMBAT_STAT_MAP[oppositeAbilityId] ? `CO.combat.long.${COMBAT_STAT_MAP[oppositeAbilityId]}` : `CO.abilities.long.${oppositeAbilityId}`)
+      : null
     return {
       formula: isPrivate ? "???" : this.formula,
       flavor: this.options.flavor,
@@ -348,7 +353,7 @@ export class COAttackRoll extends CORoll {
 
       rollContext = await foundry.applications.api.DialogV2.wait({
         window: { title: dialogContext.title },
-        position: { width: 700 },
+        position: { width: dialogContext.hasSkillBonuses ? 780 : 700 },
         classes: this.ROLL_CSS,
         content,
         rejectClose: false,
@@ -473,6 +478,20 @@ export class COAttackRoll extends CORoll {
               }
             })
           })
+          // Skill bonuses (pour les attaques basées sur une caractéristique)
+          const bonusItems = dialog.element.querySelectorAll(".bonus-item")
+          if (bonusItems.length > 0) {
+            bonusItems.forEach((input) => {
+              input.addEventListener("click", (event) => {
+                const item = event.currentTarget.closest(".bonus-item")
+                item.classList.toggle("checked")
+                const parent = event.currentTarget.closest(".skill-bonuses")
+                const checkedBonuses = Array.from(parent.querySelectorAll(".bonus-item.checked"))
+                const total = checkedBonuses.reduce((acc, curr) => acc + parseInt(curr.dataset.value), 0)
+                dialog.element.querySelector("#totalSkillBonuses").value = `${total >= 0 ? "+" : ""}${total}`
+              })
+            })
+          }
           // Dommages temporaires
           const tempDamageCb = dialog.element.querySelector('input[name="tempDamage"]')
           const radioButtons = dialog.element.querySelectorAll('input[type="radio"]')
@@ -489,9 +508,12 @@ export class COAttackRoll extends CORoll {
     }
 
     if (dialogContext.type === "attack") {
-      const formula = withDialog
-        ? Utils.evaluateFormulaCustomValues(dialogContext.actor, `${rollContext.formulaAttack}+${rollContext.skillBonus}+${rollContext.skillMalus}`)
-        : Utils.evaluateFormulaCustomValues(dialogContext.actor, `${dialogContext.formulaAttack}+${dialogContext.skillBonus}+${dialogContext.skillMalus}`)
+      let formulaStr = withDialog
+        ? `${rollContext.formulaAttack}+${rollContext.skillBonus}+${rollContext.skillMalus}`
+        : `${dialogContext.formulaAttack}+${dialogContext.skillBonus}+${dialogContext.skillMalus}`
+      const totalSkillBonuses = parseInt(withDialog ? rollContext.totalSkillBonuses : dialogContext.totalSkillBonuses) || 0
+      if (totalSkillBonuses) formulaStr += `${totalSkillBonuses > 0 ? "+" : ""}${totalSkillBonuses}`
+      const formula = Utils.evaluateFormulaCustomValues(dialogContext.actor, formulaStr)
 
       const roll = new this(formula, dialogContext.actor.getRollData())
       await roll.evaluate()
@@ -500,6 +522,9 @@ export class COAttackRoll extends CORoll {
         actorId: dialogContext.actor.id,
         rollMode: withDialog ? rollContext.rollMode : dialogContext.rollMode,
         type: "attack",
+        itemName: dialogContext.itemName,
+        itemImg: dialogContext.itemImg,
+        actionName: dialogContext.actionName,
         flavor: dialogContext.flavor,
         dice: withDialog ? rollContext.dice : dialogContext.dice,
         formulaAttack: withDialog ? rollContext.formulaAttack : dialogContext.formulaAttack,
@@ -554,8 +579,12 @@ export class COAttackRoll extends CORoll {
         const damageRollTooltip = await damageRoll.getTooltip()
         damageRoll.options = {
           actorId: dialogContext.actor.id,
+          rollMode: rolls[0].options.rollMode,
           type: "damage",
           flavor: dialogContext.flavor,
+          itemName: dialogContext.itemName,
+          itemImg: dialogContext.itemImg,
+          actionName: dialogContext.actionName,
           tooltip: damageRollTooltip,
           formulaDamage: damageFormula,
           formulaDamageTooltip: dialogContext.formulaDamageTooltip || "",
@@ -574,8 +603,12 @@ export class COAttackRoll extends CORoll {
       const tooltip = await roll.getTooltip()
       roll.options = {
         actorId: dialogContext.actor.id,
+        rollMode: withDialog ? rollContext.rollMode : dialogContext.rollMode,
         type: dialogContext.type,
         flavor: dialogContext.flavor,
+        itemName: dialogContext.itemName,
+        itemImg: dialogContext.itemImg,
+        actionName: dialogContext.actionName,
         tooltip: tooltip,
         formulaDamage: formula,
         formulaDamageTooltip: dialogContext.formulaDamageTooltip || "",
@@ -600,6 +633,11 @@ export class COAttackRoll extends CORoll {
   _getAttackChatCardData(flavor, isPrivate) {
     const rollResults = CORoll.analyseRollResult(this, this.options.hasAttackSuccessThreshold, this.options.attackSuccessThreshold)
     if (CONFIG.debug.co2?.chat) console.debug(Utils.log(`COAttackRoll - _getAttackChatCardData options`), this.options)
+    const oppositeAbilityId = this.options.difficulty?.startsWith("@oppose.") ? this.options.difficulty.replace("@oppose.", "") : null
+    const COMBAT_STAT_MAP = { atc: "melee", atd: "ranged", atm: "magic" }
+    const oppositeAbilityLabel = oppositeAbilityId
+      ? game.i18n.localize(COMBAT_STAT_MAP[oppositeAbilityId] ? `CO.combat.long.${COMBAT_STAT_MAP[oppositeAbilityId]}` : `CO.abilities.long.${oppositeAbilityId}`)
+      : null
 
     // Gestion des dés bonus/malus
     const hasDice = this.options.dice === "bonus" || this.options.dice === "malus"
@@ -636,14 +674,20 @@ export class COAttackRoll extends CORoll {
 
     // Affichage de la difficulté
     const displayDifficulty = game.settings.get("co2", "displayDifficulty")
-    const showDifficuly = displayDifficulty === "all" || (displayDifficulty === "gm" && game.user.isGM)
+    const viewerCanSeeDifficulty = displayDifficulty === "all" || (displayDifficulty === "gm" && game.user.isGM)
+    const showDifficulty = !!this.options.useDifficulty && viewerCanSeeDifficulty
 
     // On peut utiliser un point de chance si on en a et que ce n'est pas déjà un critique
-    const canUseLuckyPoints = this.options.hasLuckyPoints && !rollResults.isCritical
+    // Si la difficulté est visible par tous, on n'affiche le bouton que sur un échec (global ou par cible)
+    const anyTargetFailure = this.options.targetResults?.some((tr) => tr.isFailure) ?? false
+    const canUseLuckyPoints = this.options.hasLuckyPoints && !rollResults.isCritical && (displayDifficulty === "gm" || rollResults.isFailure || anyTargetFailure)
 
     return {
       formula: isPrivate ? "???" : this.formula,
       flavor: `${this.options.flavor}`,
+      itemName: this.options.itemName || this.options.flavor,
+      itemImg: this.options.itemImg || null,
+      actionName: this.options.actionName || "",
       user: game.user.id,
       tooltip: isPrivate ? "" : this.options.tooltip,
       total: isPrivate ? "?" : Math.ceil(this.total),
@@ -653,10 +697,11 @@ export class COAttackRoll extends CORoll {
       hasDice,
       diceType,
       useDifficulty: this.options.useDifficulty,
-      showDifficulty: showDifficuly,
+      showDifficulty,
       oppositeRoll: this.options.oppositeRoll,
       oppositeTarget: this.options.oppositeTarget,
       oppositeValue: this.options.difficulty,
+      oppositeAbilityLabel,
       hasLuckyPoints: this.options.hasLuckyPoints,
       canUseLuckyPoints,
       difficulty: rollResults.difficulty,
@@ -671,6 +716,8 @@ export class COAttackRoll extends CORoll {
       opposeTooltip: this.options.opposeTooltip,
       formulaAttackTooltip: isPrivate ? "" : this.options.formulaAttackTooltip || "",
       formulaDamageTooltip: isPrivate ? "" : this.options.formulaDamageTooltip || "",
+      targetResults: this.options.targetResults ?? [],
+      hasTargetResults: (this.options.targetResults?.length ?? 0) > 0,
     }
   }
 
@@ -688,6 +735,9 @@ export class COAttackRoll extends CORoll {
     return {
       formula: isPrivate ? "???" : this.formula,
       flavor: `${this.options.flavor}`,
+      itemName: this.options.itemName || this.options.flavor,
+      itemImg: this.options.itemImg || null,
+      actionName: this.options.actionName || "",
       user: game.user.id,
       tooltip: isPrivate ? "" : this.options.tooltip,
       total: isPrivate ? "?" : Math.ceil(this.total),
@@ -696,6 +746,8 @@ export class COAttackRoll extends CORoll {
       speaker: ChatMessage.getSpeaker({ actor: this.options.actorId, scene: canvas.scene }),
       tempDamage: this.options.tempDamage,
       formulaDamageTooltip: isPrivate ? "" : this.options.formulaDamageTooltip || "",
+      targetResults: this.options.targetResults ?? [],
+      hasTargetResults: (this.options.targetResults?.length ?? 0) > 0,
     }
   }
 

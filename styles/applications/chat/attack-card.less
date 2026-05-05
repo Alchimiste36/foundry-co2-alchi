@@ -1,23 +1,36 @@
 .co.chat-card.roll-card.attack-card {
   .card-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    border-top: 1px solid var(--color-chatAttack);
-    color: var(--color-chatAttack);
-    label {
-      color: var(--color-chatAttack);
-      text-shadow: 0 0px 2px var(--color-chatShadow);
-    }
+    border-top: none;
+    color: inherit;
+    padding: 2px 0 4px;
   }
+
   .card-content {
-    section.options {
-      display: flex;
-      flex-direction: row;
-      border-bottom: 1px dashed var(--color-chatAttack);
-      margin-bottom: 2px;
+    .bloc-result.has-target-results {
+      grid-template-columns: 1fr;
     }
+
+    .result {
+      width: 100%;
+      gap: 10px;
+    }
+
+    .attack-total-group {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      .total-result {
+        margin: 0;
+      }
+
+      .lucky-points {
+        margin: 0;
+        font-size: var(--font-size-24);
+      }
+    }
+
     button.opposite-roll {
       height: 40px;
       font-size: 18px;

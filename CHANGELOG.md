@@ -1,3 +1,64 @@
+# 2.1.0
+## Améliorations
+
+### Attaques multi-cibles
+- Chaque cible est désormais évaluée individuellement lors d'un jet d'attaque : la Défense de chaque cible est comparée au résultat pour déterminer le succès ou l'échec
+- Le message d'attaque affiche la liste des cibles avec une icône colorée indiquant le résultat individuel (succès, critique, échec, fumble)
+- L'utilisation d'un Point de Chance recalcule les résultats individuellement pour chaque cible
+
+### Jets opposés par cible
+- Un bouton "Jet opposé" apparaît pour chaque cible dans le message d'attaque
+- Chaque défenseur effectue son propre jet en opposition indépendamment
+- Le défenseur peut utiliser un Point de Chance pour augmenter son jet de 10 points
+
+### Jets de sauvegarde multi-cibles
+- Les jets de sauvegarde sont résolus cible par cible, chacune avec son propre résultat
+- Chaque cible peut dépenser un Point de Chance sur sa sauvegarde
+- Ajout d'une formule de Dommages optionnelle sur la résolution de type Sauvegarde
+- Ajout de l'option "Dommages moitié sur réussite" pour les sauvegardes
+
+### Carte de Dommages
+- Deux modes d'application : "Ciblées" (cibles de l'attaque) et "Sélectionnées" (tokens sélectionnés manuellement sur la scène)
+- Multiplicateurs individuels par cible : Soin, ×0, ×½, ×1, ×2
+- Réduction de Dommages (RD) gérée individuellement par cible
+- Bouton unique "Appliquer" pour traiter toutes les cibles en une seule action
+- Les multiplicateurs et la RD sont automatiquement pré-sélectionnés en fonction du résultat de l'attaque (×2 sur critique, ×0 sur raté)
+- Les choix de multiplicateurs et de RD sont conservés si le message est rafraîchi
+
+### Effets et conditions
+- Les effets additionnels d'une attaque sont désormais appliqués individuellement à chaque cible touchée
+- Ajout du statut "Autre" pour les effets particuliers qui ne correspondent à aucun état existant
+
+### Buff/Debuff
+- Les Buff/Debuff peuvent désormais fonctionner avec uniquement des Statuts et/ou une Durée, sans nécessiter obligatoirement des Modificateurs de statistiques
+
+### Cibles
+- Le nombre de cibles "0" en mode Multiple signifie désormais un nombre de cibles illimité
+
+### Visuel des cartes de chat
+- Nouveau design des cartes d'attaque, de dommages et de sauvegarde avec l'image et le nom de l'objet utilisé en en-tête
+- Sections dépliables pour les détails des jets et la liste des cibles
+- Portraits circulaires et icônes colorées pour les résultats par cible
+
+### Confidentialité
+- Si un joueur fait un jet privé (whisper au MJ), le message de dommages associé hérite automatiquement de la même visibilité
+
+### Options du système
+- Suppression de l'option "Ne pas utiliser ni afficher la difficulté" — la difficulté est désormais toujours affichée (pour tout le monde ou uniquement au MJ)
+- Suppression de l'option "Afficher les boutons de Dommages pour tout le monde" — remplacée par le nouveau système intégré de gestion des cibles
+- L'option "Autoriser les joueurs à modifier les cibles" contrôle désormais l'accès aux contrôles de la carte de Dommages
+
+### Bonus de compétence
+- Le dialogue d'attaque propose de sélectionner des bonus de compétence applicables au jet
+- Prise en compte des compétences pour les attaques basées sur les caractéristiques
+
+## Corrections
+- Correction du calcul des dommages temporaires : la Force de la cible est désormais correctement soustraite du total
+- Correction de la double application des effets additionnels (always/critical + jet opposé)
+- Correction de la formule invalide lorsque plusieurs modificateurs avec dés sont combinés
+- Correction de l'info-bulle sur les boutons "jet opposé" qui affichait une valeur non traduite pour @atc, @atd et @atm
+- Correction de la gestion de @Test depuis un journal dont la fenêtre a été détachée
+
 # 2.0.2
 ## Corrections
 - Corrige le retour à la ligne automatique manquant dans les descriptions

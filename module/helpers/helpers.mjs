@@ -15,7 +15,54 @@ import Macros from "./macros.mjs"
 export function setupTextEnrichers() {
   CONFIG.TextEditor.enrichers = CONFIG.TextEditor.enrichers.concat([
     {
+      id: "co2-test",
       pattern: /@Test\[([^\]]+)\]/gi,
+      onRender: (element) => {
+        const anchor = element.querySelector(".roll-check-enricher")
+        if (!anchor) return
+        anchor.onclick = async (event) => {
+          event.preventDefault()
+
+          const ability = anchor.dataset.ability
+          const difficulty = anchor.dataset.difficulty ? parseInt(anchor.dataset.difficulty) : undefined
+          const skills = anchor.dataset.skills || undefined
+          const onSuccess = anchor.dataset.onSuccess || undefined
+          const onFailure = anchor.dataset.onFailure || undefined
+          const label = game.i18n.localize(`CO.abilities.short.${ability}`)
+
+          const vowels = "aeiouyàâéèêëïîôùûüAEIOUYÀÂÉÈÊËÏÎÔÙÛÜ"
+          const preposition = vowels.includes(label.charAt(0)) ? "d'" : "de "
+          const title = `Test ${preposition}${label}`
+
+          const successDamage = anchor.dataset.successDamage || undefined
+          const failureDamage = anchor.dataset.failureDamage || undefined
+          const successStatuses = anchor.dataset.successStatuses || undefined
+          const failureStatuses = anchor.dataset.failureStatuses || undefined
+          const rollOptions = anchor.dataset.rollOptions || undefined
+
+          const templateData = {
+            title,
+            ability,
+            difficulty,
+            skills,
+            onSuccess,
+            onFailure,
+            successDamage,
+            failureDamage,
+            successStatuses,
+            failureStatuses,
+            rollOptions,
+          }
+
+          const content = await foundry.applications.handlebars.renderTemplate("systems/co2/templates/chat/check-card.hbs", templateData)
+
+          await ChatMessage.create({
+            content,
+            speaker: ChatMessage.getSpeaker(),
+            type: "check",
+          })
+        }
+      },
       enricher: async (match) => {
         const content = match[1]
         const parts = content.split("|")
@@ -108,53 +155,6 @@ export function setupTextEnrichers() {
       },
     },
   ])
-
-  // Click on enriched link in journal/description → send a chat message
-  document.addEventListener("click", async (event) => {
-    const anchor = event.target.closest(".roll-check-enricher")
-    if (!anchor) return
-    event.preventDefault()
-
-    const ability = anchor.dataset.ability
-    const difficulty = anchor.dataset.difficulty ? parseInt(anchor.dataset.difficulty) : undefined
-    const skills = anchor.dataset.skills || undefined
-    const onSuccess = anchor.dataset.onSuccess || undefined
-    const onFailure = anchor.dataset.onFailure || undefined
-    const label = game.i18n.localize(`CO.abilities.short.${ability}`)
-
-    // French contraction: "de" → "d'" before vowels
-    const vowels = "aeiouyàâéèêëïîôùûüAEIOUYÀÂÉÈÊËÏÎÔÙÛÜ"
-    const preposition = vowels.includes(label.charAt(0)) ? "d'" : "de "
-    const title = `Test ${preposition}${label}`
-
-    const successDamage = anchor.dataset.successDamage || undefined
-    const failureDamage = anchor.dataset.failureDamage || undefined
-    const successStatuses = anchor.dataset.successStatuses || undefined
-    const failureStatuses = anchor.dataset.failureStatuses || undefined
-    const rollOptions = anchor.dataset.rollOptions || undefined
-
-    const templateData = {
-      title,
-      ability,
-      difficulty,
-      skills,
-      onSuccess,
-      onFailure,
-      successDamage,
-      failureDamage,
-      successStatuses,
-      failureStatuses,
-      rollOptions,
-    }
-
-    const content = await foundry.applications.handlebars.renderTemplate("systems/co2/templates/chat/check-card.hbs", templateData)
-
-    await ChatMessage.create({
-      content,
-      speaker: ChatMessage.getSpeaker(),
-      type: "check",
-    })
-  })
 }
 
 /**

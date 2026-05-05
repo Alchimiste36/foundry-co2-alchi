@@ -280,7 +280,7 @@ export default class EncounterData extends ActorData {
     let total = 0
     if (modifiersByTarget && modifiersByTarget.length > 0) {
       let evaluatedModifiers = modifiersByTarget.map((m) => m.evaluate(this.parent, withDice))
-      total = withDice ? evaluatedModifiers.join(" ") : evaluatedModifiers.reduce((acc, curr) => acc + curr, 0)
+      total = withDice ? Utils.joinFormulaTerms(evaluatedModifiers) : evaluatedModifiers.reduce((acc, curr) => acc + curr, 0)
     }
 
     let tooltip = ""

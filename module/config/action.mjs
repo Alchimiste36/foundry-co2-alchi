@@ -337,4 +337,8 @@ export const RESOLVER_ADDITIONAL_EFFECT_STATUS = {
     id: "surprised",
     label: "CO.customStatus.surprised",
   },
+  other: {
+    id: "other",
+    label: "CO.customStatus.other",
+  },
 }

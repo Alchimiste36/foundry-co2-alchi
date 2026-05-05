@@ -298,6 +298,12 @@ export const CUSTOM_STATUS_EFFECT = [
     img: "icons/svg/aura.svg",
     description: "CO.customStatus.customEffectDescription",
   },
+  {
+    id: "other",
+    name: "CO.customStatus.other",
+    img: "icons/svg/hazard.svg",
+    description: "CO.customStatus.otherDescription",
+  },
 ]
 
 export const CUSTOM_EFFECT = {

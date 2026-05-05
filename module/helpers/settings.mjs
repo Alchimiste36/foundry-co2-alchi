@@ -30,10 +30,9 @@ export function registerSystemSettings() {
     hint: "CO.settings.displayDifficulty.hint",
     scope: "world",
     config: true,
-    default: "none",
+    default: "gm",
     type: String,
     choices: {
-      none: "CO.settings.displayDifficulty.none",
       all: "CO.settings.displayDifficulty.all",
       gm: "CO.settings.displayDifficulty.gm",
     },
@@ -45,15 +44,6 @@ export function registerSystemSettings() {
     scope: "world",
     config: true,
     default: true,
-    type: Boolean,
-  })
-
-  game.settings.register("co2", "displayChatDamageButtonsToAll", {
-    name: "CO.settings.displayChatDamageButtonsToAll.name",
-    hint: "CO.settings.displayChatDamageButtonsToAll.hint",
-    scope: "world",
-    config: true,
-    default: false,
     type: Boolean,
   })
 

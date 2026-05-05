@@ -81,6 +81,7 @@ Hooks.once("init", async function () {
   CONFIG.queries["co2.updateMessageAfterLuck"] = documents.COChatMessage._handleQueryUpdateMessageAfterLuck
   CONFIG.queries["co2.updateMessageAfterOpposedRoll"] = documents.COChatMessage._handleQueryUpdateMessageAfterOpposedRoll
   CONFIG.queries["co2.updateMessageAfterSavedRoll"] = documents.COChatMessage._handleQueryUpdateMessageAfterSavedRoll
+  CONFIG.queries["co2.updateTargetResults"] = documents.COChatMessage._handleQueryUpdateTargetResults
   CONFIG.queries["co2.applyCustomEffect"] = models.CustomEffectData._handleQueryApplyCustomEffect
   CONFIG.queries["co2.actorHeal"] = documents.COActor._handleQueryHeal
   CONFIG.queries["co2.actorHealSingleTarget"] = documents.COActor._handleQueryHealSingleTarget
@@ -204,6 +205,11 @@ Hooks.once("ready", async function () {
         chat: false,
         combat: false,
       }
+  }
+
+  // Migration : suppression de l'option "none" pour displayDifficulty
+  if (game.user.isGM && game.settings.get("co2", "displayDifficulty") === "none") {
+    await game.settings.set("co2", "displayDifficulty", "gm")
   }
 
   // Statistics

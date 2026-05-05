@@ -1618,19 +1618,9 @@ export default class COActor extends Actor {
     // Gestion de la difficulté
     const difficultyTooltip = difficulty
     const displayDifficulty = game.settings.get("co2", "displayDifficulty")
-    if (useDifficulty === undefined) {
-      if (displayDifficulty === "none") {
-        useDifficulty = false
-      } else {
-        useDifficulty = true
-        if (showDifficulty === undefined) {
-          showDifficulty = displayDifficulty === "all" || (displayDifficulty === "gm" && game.user.isGM)
-        }
-      }
-    } else {
-      if (showDifficulty === undefined) {
-        showDifficulty = displayDifficulty === "all" || (displayDifficulty === "gm" && game.user.isGM)
-      }
+    if (useDifficulty === undefined) useDifficulty = true
+    if (showDifficulty === undefined) {
+      showDifficulty = displayDifficulty === "all" || (displayDifficulty === "gm" && game.user.isGM)
     }
 
     // Si la difficulté dépend de la cible unique
@@ -1839,6 +1829,7 @@ export default class COActor extends Actor {
       skillFormulaTooltip = "",
       damageFormula = undefined,
       damageFormulaTooltip = "",
+      targetType = SYSTEM.RESOLVER_TARGET.none.id,
       targets = undefined,
       customEffect,
       additionalEffect,
@@ -1871,6 +1862,7 @@ export default class COActor extends Actor {
       skillFormulaTooltip,
       damageFormula,
       damageFormulaTooltip,
+      targetType,
       targets,
       customEffect,
       additionalEffect,
@@ -1922,30 +1914,26 @@ export default class COActor extends Actor {
     // Gestion de la difficulté
     const difficultyTooltip = difficulty
     let oppositeRoll = false
-    if (!auto && useDifficulty === undefined) {
-      const displayDifficulty = game.settings.get("co2", "displayDifficulty")
-      if (displayDifficulty === "none") {
-        useDifficulty = false
-      } else {
-        useDifficulty = true
-        if (showDifficulty === undefined) {
-          showDifficulty = displayDifficulty === "all" || (displayDifficulty === "gm" && game.user.isGM)
-        }
-      }
-    } else {
-      if (!auto && showDifficulty === undefined) {
-        showDifficulty = displayDifficulty === "all" || (displayDifficulty === "gm" && game.user.isGM)
-      }
+    const displayDifficulty = game.settings.get("co2", "displayDifficulty")
+    if (!auto && useDifficulty === undefined) useDifficulty = true
+    if (!auto && showDifficulty === undefined) {
+      showDifficulty = displayDifficulty === "all" || (displayDifficulty === "gm" && game.user.isGM)
     }
     // Si la difficulté dépend de la cible unique
-    if (!auto && useDifficulty && targets === undefined) {
+    if (!auto && useDifficulty) {
+      const optionalTargetCount = canvas.tokens?.placeables?.length ?? 999
       if (difficulty && difficulty?.includes("@cible")) {
-        targets = this.acquireTargets("single", "all", 1, actionName)
+        if (targets === undefined || targets.length === 0) {
+          if (targetType === SYSTEM.RESOLVER_TARGET.none.id) {
+            targets = this.acquireTargets(SYSTEM.RESOLVER_TARGET.multiple.id, SYSTEM.RESOLVER_SCOPE.all.id, optionalTargetCount, actionName)
+          } else {
+            targets = this.acquireTargets("single", "all", 1, actionName)
+          }
+        }
         if (targets.length === 0) {
           difficulty = null
-        }
-        if (targets.length > 0) {
-          // Enlève le cible. de la difficulté
+        } else {
+          // Enlève le cible. de la difficulté (résolu contre la première cible pour le résultat global)
           difficulty = difficulty.replace(/@.*\./, "@")
           difficulty = CORoll.replaceFormulaData(difficulty, targets[0].actor.getRollData())
         }
@@ -1954,7 +1942,13 @@ export default class COActor extends Actor {
       // Si l'attaque demande un jet opposé contre la cible
       else if (difficulty && difficulty.includes("@oppose")) {
         oppositeRoll = true
-        targets = this.acquireTargets("single", "all", 1, actionName)
+        if (targets === undefined || targets.length === 0) {
+          if (targetType === SYSTEM.RESOLVER_TARGET.none.id) {
+            targets = this.acquireTargets(SYSTEM.RESOLVER_TARGET.multiple.id, SYSTEM.RESOLVER_SCOPE.all.id, optionalTargetCount, actionName)
+          } else {
+            targets = this.acquireTargets("single", "all", 1, actionName)
+          }
+        }
         if (targets.length === 0) {
           difficulty = null
         }
@@ -1978,9 +1972,20 @@ export default class COActor extends Actor {
 
     // Enrichissement du tooltip d'attaque avec les modificateurs de combat
     if (this.type === "character") {
-      const attackSkillKey = actionType === SYSTEM.ACTION_TYPES.spell.id || actionType === SYSTEM.ACTION_TYPES.magical.id ? "magic" : actionType
-      const attackSkill = this.system.combat[attackSkillKey]
-      if (attackSkill?.tooltipValue) skillFormulaTooltip = attackSkill.tooltipValue
+      const attackType = Utils.getAttackTypeFromFormula(originalSkillFormula, actionType)
+      if (attackType) {
+        const attackSkillKey = actionType === SYSTEM.ACTION_TYPES.spell.id || actionType === SYSTEM.ACTION_TYPES.magical.id ? "magic" : actionType
+        const attackSkill = this.system.combat[attackSkillKey]
+        if (attackSkill?.tooltipValue) skillFormulaTooltip = attackSkill.tooltipValue
+      } else {
+        let tooltip = ""
+        for (const [key, ability] of Object.entries(this.system.abilities)) {
+          if (originalSkillFormula.includes(`@${key}`)) {
+            tooltip += ability.tooltipValue
+          }
+        }
+        if (tooltip) skillFormulaTooltip = tooltip
+      }
     }
 
     // Gestion des dés bonus et malus
@@ -2072,6 +2077,31 @@ export default class COActor extends Actor {
     let opposeResult = ""
     let opposeTooltip = ""
 
+    let dialogTargets = targets
+    if (type === "attack" && targets?.length > 0 && useDifficulty && showDifficulty) {
+      const targetDifficultyPreview = Utils.computeTargetResults(targets, difficultyTooltip, 0, {})
+      dialogTargets = targets.map((target, index) => ({
+        ...target,
+        previewDifficulty: targetDifficultyPreview[index]?.difficulty ?? null,
+      }))
+    }
+
+    // Gestion des skillBonuses pour les attaques basées sur une caractéristique
+    let skillBonuses = []
+    let hasSkillBonuses = false
+    if (this.type === "character") {
+      const isCharacteristicAttack = !Utils.getAttackTypeFromFormula(originalSkillFormula, actionType)
+      if (isCharacteristicAttack) {
+        for (const [key] of Object.entries(this.system.abilities)) {
+          if (originalSkillFormula.includes(`@${key}`)) {
+            skillBonuses = this.getSkillBonuses(key)
+            break
+          }
+        }
+        hasSkillBonuses = skillBonuses.length > 0
+      }
+    }
+
     // Préparation des statuts disponibles pour l'effet additionnel
     let availableStatuses = []
     let hasAvailableStatuses = false
@@ -2091,6 +2121,8 @@ export default class COActor extends Actor {
       type,
       dice,
       useComboRolls,
+      itemName: item.name,
+      itemImg: item.img,
       actionName: actionName,
       title: `${item.name} ${actionName}`,
       flavor: chatFlavor,
@@ -2110,8 +2142,8 @@ export default class COActor extends Actor {
       formulaAttackTooltip: skillFormulaTooltip,
       formulaDamage: damageFormula,
       formulaDamageTooltip: damageFormulaTooltip,
-      targets,
-      hasTargets: targets?.length > 0,
+      targets: dialogTargets,
+      hasTargets: dialogTargets?.length > 0,
       tempDamage,
       canBeTempDamage,
       tactical,
@@ -2122,6 +2154,9 @@ export default class COActor extends Actor {
       attackSuccessThreshold: attackSuccessThreshold,
       availableStatuses,
       hasAvailableStatuses,
+      skillBonuses,
+      hasSkillBonuses,
+      totalSkillBonuses: 0,
     }
 
     // Rolls contient le jet d'attaque et le jet de dommages si le type est "attack"
@@ -2151,6 +2186,29 @@ export default class COActor extends Actor {
      */
     if (Hooks.call("co.resultRollAttack", item, options, rolls, results) === false) return
 
+    // Calcul des résultats par cible (une ligne par cible sur la carte de chat)
+    let targetResults = []
+    if (targets && targets.length > 0) {
+      if (type === "attack") {
+        targetResults = Utils.computeTargetResults(targets, difficultyTooltip, rolls[0].total, results[0])
+        rolls[0].options.targetResults = targetResults
+        if (rolls[1]) rolls[1].options.targetResults = targetResults
+      } else if (type === "damage") {
+        targetResults = targets.map((target) => ({
+          uuid: target.uuid,
+          name: target.name,
+          img: target.token?.document?.texture?.src ?? target.actor?.img ?? null,
+          difficulty: null,
+          isSuccess: false,
+          isFailure: false,
+          isCritical: false,
+          isFumble: false,
+          needsOppositeRoll: false,
+        }))
+        rolls[0].options.targetResults = targetResults
+      }
+    }
+
     // Prépare le message de résultat
     const speaker = ChatMessage.getSpeaker({ actor: this, scene: canvas.scene })
 
@@ -2175,21 +2233,20 @@ export default class COActor extends Actor {
           speaker,
           style: CONST.CHAT_MESSAGE_STYLES.OTHER,
           type: "action",
-          system: { subtype: "attack", targets: targetsUuid, result: results[0], linkedRoll, customEffect: effectiveCustomEffect, additionalEffect, selectedStatuses },
+          system: { subtype: "attack", targets: targetsUuid, targetResults, result: results[0], linkedRoll, customEffect: effectiveCustomEffect, additionalEffect, selectedStatuses, oppositeValue: oppositeRoll ? difficultyTooltip : null },
         },
         { messageMode: rolls[0].options.rollMode },
       )
 
-      // Affichage du jet de dommages dans le cas d'un jet combiné, si ce n'est pas un jet opposé et si l'attaque est un succès
+      // Affichage du jet de dommages dans le cas d'un jet combiné, si ce n'est pas un jet opposé
+      // Si la difficulté n'est visible que par le MJ, on affiche systématiquement les dommages pour ne pas révéler le résultat au joueur
       if (game.settings.get("co2", "useComboRolls")) {
-        // Option de la difficulté activée
-        if (
-          game.settings.get("co2", "displayDifficulty") === "none" ||
-          (game.settings.get("co2", "displayDifficulty") !== "none" && !rolls[0].options.oppositeRoll && results[0].isSuccess)
-        ) {
+        const displayDifficulty = game.settings.get("co2", "displayDifficulty")
+        const anyTargetHit = results[0].isSuccess || targetResults.some((tr) => tr.isSuccess)
+        if (!rolls[0].options.oppositeRoll && (displayDifficulty === "gm" || anyTargetHit)) {
           if (rolls[1]) {
             await rolls[1].toMessage(
-              { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: { subtype: "damage", targets: targetsUuid }, speaker },
+              { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: { subtype: "damage", targets: targetsUuid, targetResults }, speaker },
               { messageMode: rolls[1].options.rollMode },
             )
           }
@@ -2200,7 +2257,7 @@ export default class COActor extends Actor {
     // Jet de dommages
     else if (type === "damage") {
       await rolls[0].toMessage(
-        { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: { subtype: "damage", targets: targetsUuid }, speaker },
+        { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: { subtype: "damage", targets: targetsUuid, targetResults }, speaker },
         { messageMode: rolls[0].options.rollMode },
       )
     }
@@ -2210,7 +2267,7 @@ export default class COActor extends Actor {
       await this.consumeAmmunition(item)
     }
 
-    return { results, selectedStatuses }
+    return { results, selectedStatuses, targetResults }
   }
 
   /**
@@ -2305,22 +2362,34 @@ export default class COActor extends Actor {
       actionName = "",
       ability = undefined,
       difficulty = undefined,
+      difficultyFormula = undefined,
       showDifficulty = false,
       targetType = SYSTEM.RESOLVER_TARGET.none.id,
       targets = [],
       customEffect = undefined,
       additionalEffect = undefined,
+      dmgRoll = null,
+      dmgTotal = null,
+      dmgFormula = null,
+      dmgTooltip = null,
+      halfDmgOnSave = true,
     } = {},
   ) {
     const options = {
       actionName,
       ability,
       difficulty,
+      difficultyFormula,
       showDifficulty,
       targetType,
       targets,
       customEffect,
       additionalEffect,
+      dmgRoll,
+      dmgTotal,
+      dmgFormula,
+      dmgTooltip,
+      halfDmgOnSave,
     }
 
     /**
@@ -2358,32 +2427,88 @@ export default class COActor extends Actor {
       return false
     }
 
-    const rollMode = game.settings.get("core", "messageMode") 
+    // Construction des targetResults
+    const targetResults = []
+    if (targetType === SYSTEM.RESOLVER_TARGET.none.id || targetType === SYSTEM.RESOLVER_TARGET.self.id) {
+      targetResults.push({
+        uuid: this.uuid,
+        name: this.name,
+        img: this.img ?? null,
+        needsSaveRoll: true,
+        total: null,
+        isSuccess: false,
+        isFailure: false,
+        isCritical: false,
+        isFumble: false,
+        saveActorId: null,
+        saveHasLuckyPoints: false,
+        rollFormula: null,
+        rollTooltip: null,
+      })
+    } else {
+      targets.forEach((target) => {
+        targetResults.push({
+          uuid: target.actor?.uuid ?? target.uuid,
+          name: target.name ?? target.actor?.name,
+          img: target.token?.document?.texture?.src ?? target.actor?.img ?? null,
+          needsSaveRoll: true,
+          total: null,
+          isSuccess: false,
+          isFailure: false,
+          isCritical: false,
+          isFumble: false,
+          saveActorId: null,
+          saveHasLuckyPoints: false,
+          rollFormula: null,
+          rollTooltip: null,
+        })
+      })
+    }
+
+    const hasDmg = dmgTotal !== null && dmgTotal !== undefined
 
     const contentData = {
       ability: ability,
       difficulty: difficulty,
-      showButton: true,
+      difficultyFormula: difficultyFormula ?? null,
+      showDifficulty,
+      targetResults,
       flavor: flavor,
+      itemImg: item?.img ?? null,
+      itemName: item?.name ?? "",
+      actionName: actionName ?? "",
+      hasDmg,
+      dmgTotal,
+      dmgFormula,
+      dmgTooltip,
+      halfDmgOnSave,
     }
 
     const messageSystem = {
       ability: ability,
       difficulty: difficulty,
+      difficultyFormula: difficultyFormula ?? null,
       targetType,
       targets: targetUuids,
-      showButton: true,
+      targetResults,
       customEffect,
       additionalEffect,
+      dmgTotal: hasDmg ? dmgTotal : null,
+      dmgFormula: hasDmg ? dmgFormula : null,
+      dmgTooltip: hasDmg ? dmgTooltip : null,
+      halfDmgOnSave,
     }
 
-    new CoChat(this)
+    const chatBuilder = new CoChat(this)
       .withTemplate("systems/co2/templates/chat/save-card.hbs")
       .withData(contentData)
       .withMessageType("save")
       .withSystem(messageSystem)
       .withOptions({ speaker: speaker, style: CONST.CHAT_MESSAGE_STYLES.OTHER })
-      .create()
+
+    if (dmgRoll) chatBuilder.withRolls([dmgRoll])
+
+    chatBuilder.create()
 
     return true
   }
@@ -2407,7 +2532,9 @@ export default class COActor extends Actor {
     if (isTemporaryDamage) {
       const currentMaxHp = this.system.attributes.hp.max
       const currentTempDamage = this.system.attributes.tempDm
-      const newTempDamage = Math.min(currentTempDamage + finalDamage, currentMaxHp)
+      const targetFor = this.system.abilities.for.value
+      const amountTempDamage = Math.max(0, finalDamage - targetFor)
+      const newTempDamage = Math.min(currentTempDamage + amountTempDamage, currentMaxHp)
       await this.update({ "system.attributes.tempDm": newTempDamage })
     }
     // Gestion des dommages normaux
@@ -2509,9 +2636,9 @@ export default class COActor extends Actor {
       return []
     }
 
-    // Validation du nombre de cibles
+    // Validation du nombre de cibles (number=0 pour multiple = illimité)
     const expectedNumber = single ? 1 : number
-    if (tokens.size > expectedNumber) {
+    if (expectedNumber > 0 && tokens.size > expectedNumber) {
       const error = game.i18n.format("CO.notif.warningIncorrectTargets", {
         number: expectedNumber,
         action: actionName,

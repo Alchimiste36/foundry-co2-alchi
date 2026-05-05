@@ -375,7 +375,7 @@
       "warningNotEnoughMana": "Pas assez de mana pour lancer le sort.",
       "warningLevelTooLow": "Vous n'avez pas le niveau minimum pour apprendre cette capacité.",
       "warningTargetCapacityRankLowerThanPathRank": "Vous connaissez une capacité d'un rang supérieur à celui de \"{capacityName}\" dans cette voie.",
-      "warningApplyDamageNoTarget": "Vous devez sélectionner au moins une cible pour appliquer les dommages",
+      "warningApplyDamageNoTarget": "Aucun token sélectionné",
       "warningNoMoreRecoveryPoints": "Vous n'avez plus de dés de récupération.",
       "warningNoAmmo": "Vous n'avez plus de munitions.",
       "warningNoCharge": "Votre nombre d'utilisations restantes est insuffisant",
@@ -601,7 +601,9 @@
       "fullDefActivate": "Activer la défense totale (L)",
       "fullDefDeactivate": "Désactiver la défense totale (L)",
       "enslaved": "Asservi",
-      "enslavedDescription": "Vous êtes sous le contrôle d'une autre entité"
+      "enslavedDescription": "Vous êtes sous le contrôle d'une autre entité",
+      "other": "Autre",
+      "otherDescription": "Subit un état particulier non listé"
     },
     "ui": {
       "none": "--",
@@ -686,7 +688,7 @@
       "saves": "Sauvegarde",
       "saveAbility": "Sauvegarde basé sur :",
       "saveDifficulty": "Seuil de difficulté :",
-      "targets": "Cible(s)",
+      "targets": "Cibles",
       "width": "Largeur",
       "range": "Portée",
       "consumes": "Consomme",
@@ -720,6 +722,12 @@
       "applyHalfDamage": "Appliquer la moitié des dommages",
       "applyDoubleDamage": "Appliquer le double des dommages",
       "applyHealing": "Soigner du montant des dommages",
+      "apply": "Appliquer",
+      "targeted": "Ciblé",
+      "selected": "Sélectionné",
+      "noDamage": "Pas de dommages",
+      "halfDmgOnSave": "Demi-DM si sauvegarde réussie",
+      "applied": "Appliqué",
       "newAction": "",
       "capacitiesOffPaths": "Capacités hors voies",
       "capacitiesLearned": "Capacités acquises",
@@ -1270,22 +1278,17 @@
       },
       "displayDifficulty": {
         "name": "Afficher la difficulté",
-        "hint": "Active l'affichage de la difficulté sur les jets de compétences/attributs et d'armes.",
-        "none": "Ne pas utiliser ni afficher la difficulté",
-        "all": "Utiliser la difficulté et l'afficher pour tout le monde",
-        "gm": "Utiliser la difficulté et l'afficher uniquement au MJ"
+        "hint": "Détermine qui peut voir la difficulté sur les jets de compétences, d'attributs et d'attaques.",
+        "all": "Pour tout le monde",
+        "gm": "Uniquement au MJ"
       },
       "useComboRolls": {
         "name": "Activer les jets combinés attaque et dommages",
         "hint": "Permet de lancer les jets d'attaque et de dommages simultanément."
       },
-      "displayChatDamageButtonsToAll": {
-        "name": "Afficher les boutons de dommages et de soins aux joueurs",
-        "hint": "Affiche les boutons d'application des dommages et des soins dans les messages de chat aux joueurs."
-      },
       "allowPlayersToModifyTargets": {
         "name": "Autoriser les joueurs à modifier les cibles",
-        "hint": "Permet aux joueurs de soigner ou blesser les cibles, y compris les autres joueurs ou PNJs."
+        "hint": "Permet aux joueurs de soigner ou blesser les cibles, y compris les autres joueurs ou PNJs. Affiche les boutons d'application des dommages et des soins dans les messages de chat."
       },
       "checkFreeHandsBeforeEquip": {
         "name": "Vérification des mains libres",

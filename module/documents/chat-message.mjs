@@ -72,10 +72,13 @@ export default class COChatMessage extends ChatMessage {
    * @static
    * @async
    */
-  static async _handleQueryUpdateMessageAfterLuck({ existingMessageId, rolls, result } = {}) {
+  static async _handleQueryUpdateMessageAfterLuck({ existingMessageId, rolls, result, targetResults } = {}) {
     const message = game.messages.get(existingMessageId)
     if (!message) return
-    await message.update({ rolls: rolls, "system.result": result })
+    const updateData = { rolls: rolls }
+    if (result !== undefined && result !== null) updateData["system.result"] = result
+    if (targetResults !== undefined) updateData["system.targetResults"] = targetResults
+    await message.update(updateData)
   }
 
   /**
@@ -90,10 +93,14 @@ export default class COChatMessage extends ChatMessage {
    * @static
    * @async
    */
-  static async _handleQueryUpdateMessageAfterOpposedRoll({ existingMessageId, rolls, result } = {}) {
+  static async _handleQueryUpdateMessageAfterOpposedRoll({ existingMessageId, rolls, result, targetResults, linkedDamageMessageId } = {}) {
     const message = game.messages.get(existingMessageId)
     if (!message) return
-    await message.update({ rolls: rolls, "system.result": result })
+    const updateData = { rolls: rolls }
+    if (result !== undefined && result !== null) updateData["system.result"] = result
+    if (targetResults !== undefined) updateData["system.targetResults"] = targetResults
+    if (linkedDamageMessageId) updateData["system.linkedDamageMessageId"] = linkedDamageMessageId
+    await message.update(updateData)
   }
 
   /**
@@ -108,9 +115,36 @@ export default class COChatMessage extends ChatMessage {
    * @static
    * @async
    */
-  static async _handleQueryUpdateMessageAfterSavedRoll({ existingMessageId, rolls, result } = {}) {
+  static async _handleQueryUpdateMessageAfterSavedRoll({ existingMessageId, rolls, targetResults, dmgApplied, effectsApplied, appliedTempDamage } = {}) {
     const message = game.messages.get(existingMessageId)
     if (!message) return
-    await message.update({ rolls: rolls, "system.result": result, "system.showButton": false })
+    const updateData = {}
+    if (rolls !== undefined) updateData.rolls = rolls
+    if (targetResults !== undefined) updateData["system.targetResults"] = targetResults
+    if (dmgApplied !== undefined) updateData["system.dmgApplied"] = dmgApplied
+    if (effectsApplied !== undefined) updateData["system.effectsApplied"] = effectsApplied
+    if (appliedTempDamage !== undefined) updateData["system.appliedTempDamage"] = appliedTempDamage
+    await message.update(updateData)
+  }
+
+  /**
+   * Met à jour les targetResults d'un message (ex : persistance des multiplicateurs de dommages)
+   *
+   * @param {Object} options
+   * @param {string} options.existingMessageId L'ID du message à mettre à jour
+   * @param {Array} options.targetResults Les targetResults mis à jour
+   * @returns {Promise<void>}
+   * @private
+   * @static
+   * @async
+   */
+  static async _handleQueryUpdateTargetResults({ existingMessageId, targetResults, effectsApplied, customEffect, additionalEffect } = {}) {
+    const message = game.messages.get(existingMessageId)
+    if (!message) return
+    const updateData = { "system.targetResults": targetResults }
+    if (effectsApplied) updateData["system.effectsApplied"] = true
+    if (customEffect) updateData["system.customEffect"] = customEffect
+    if (additionalEffect) updateData["system.additionalEffect"] = additionalEffect
+    await message.update(updateData)
   }
 }
