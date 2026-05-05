@@ -601,7 +601,9 @@
       "fullDefActivate": "Activer la défense totale (L)",
       "fullDefDeactivate": "Désactiver la défense totale (L)",
       "enslaved": "Asservi",
-      "enslavedDescription": "Vous êtes sous le contrôle d'une autre entité"
+      "enslavedDescription": "Vous êtes sous le contrôle d'une autre entité",
+      "other": "Autre",
+      "otherDescription": "Subit un état particulier non listé"
     },
     "ui": {
       "none": "--",
