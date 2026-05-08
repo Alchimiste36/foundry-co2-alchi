@@ -133,7 +133,7 @@ export default class ActionMessageData extends BaseMessageData {
             if (footer) {
               const btn = document.createElement("button")
               btn.type = "button"
-              btn.classList.add("apply-effects-btn")
+              btn.classList.add("apply-btn", "apply-effects-btn")
               btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> ${game.i18n.localize("CO.ui.applyEffects")}`
               footer.appendChild(btn)
             }

@@ -301,7 +301,7 @@ export default class SaveMessageData extends BaseMessageData {
           section.classList.add("save-apply-section")
           const btn = document.createElement("button")
           btn.type = "button"
-          btn.classList.add("save-apply-effects-btn")
+          btn.classList.add("apply-btn", "save-apply-effects-btn")
           btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> ${game.i18n.localize("CO.ui.applyEffects")}`
           section.appendChild(btn)
           targetsSection.insertAdjacentElement("afterend", section)
