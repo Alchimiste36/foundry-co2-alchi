@@ -102,6 +102,15 @@
                 {{/if}}
               {{/if}}
             {{/if}}
+            {{#if opposeHasLuckyPoints}}
+              {{#if isSuccess}}
+                {{#unless isCritical}}
+                  <a class="lp-button-oppose-target" data-actor-id="{{opposeActorId}}">
+                    <i class="fa-regular fa-clover" data-tooltip="{{localize 'CO.dialogs.spendLuckyPoint'}}" data-tooltip-direction="UP"></i>
+                  </a>
+                {{/unless}}
+              {{/if}}
+            {{/if}}
           {{/if}}
         </section>
       {{/unless}}

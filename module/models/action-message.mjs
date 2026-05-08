@@ -117,6 +117,29 @@ export default class ActionMessageData extends BaseMessageData {
           elt.remove()
         })
       }
+
+      // Bouton "Appliquer les effets" pour les jets opposés sans dommages
+      const hasCustomEffect = message.system.customEffect && message.system.additionalEffect?.active
+      const hasLinkedDamage = message.system.linkedRoll && Object.keys(message.system.linkedRoll).length > 0
+      const hasOpposedRoll = !!message.system.oppositeValue
+      if (hasCustomEffect && !hasLinkedDamage && hasOpposedRoll && !message.system.effectsApplied) {
+        const targetResults = message.system.targetResults ?? []
+        const hasResolvedOppose = targetResults.some((tr) => !tr.needsOppositeRoll && tr.opposeActorId)
+        const singleTargetResolved = targetResults.length === 0 && !!message.rolls?.[0]?.options?.opposeResult
+        if (hasResolvedOppose || singleTargetResolved) {
+          const canApply = game.user.isGM || (game.settings.get("co2", "allowPlayersToModifyTargets") && this.parent.isAuthor)
+          if (canApply) {
+            const footer = html.querySelector(".card-footer")
+            if (footer) {
+              const btn = document.createElement("button")
+              btn.type = "button"
+              btn.classList.add("apply-effects-btn")
+              btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> ${game.i18n.localize("CO.ui.applyEffects")}`
+              footer.appendChild(btn)
+            }
+          }
+        }
+      }
     }
     // Message de dommages
     else {
@@ -383,6 +406,8 @@ export default class ActionMessageData extends BaseMessageData {
               rolls[0].options.difficulty = opposed.total
               rolls[0].options.opposeResult = opposed.resultStr
               rolls[0].options.opposeTooltip = opposed.tooltipStr
+              rolls[0].options.opposeHasLuckyPoints = opposed.hasLuckyPoints
+              rolls[0].options.opposeActorId = opposed.actorId
               newGlobalResult = { ...attackerResult, isSuccess: outcome.isSuccess, isFailure: outcome.isFailure, difficulty: opposed.total }
             }
 
@@ -408,16 +433,18 @@ export default class ActionMessageData extends BaseMessageData {
               })
             }
 
-            // Gestion des custom effects — différée au bouton "Appliquer les DM" si un message de dommages existe
+            // Gestion des custom effects — différée au bouton "Appliquer les DM" ou "Appliquer les effets"
             const hasLinkedDamage = message.system.linkedRoll && Object.keys(message.system.linkedRoll).length > 0
             if (!hasLinkedDamage) {
-              const rowResultForEffect = { ...attackerResult, ...outcome }
-              await OpposedRollHandler.applyEffects({
-                customEffect: message.system.customEffect,
-                additionalEffect: message.system.additionalEffect,
-                result: rowResultForEffect,
-                targetActor,
-              })
+              if (message.system.effectsApplied) {
+                const rowResultForEffect = { ...attackerResult, ...outcome }
+                await OpposedRollHandler.applyEffects({
+                  customEffect: message.system.customEffect,
+                  additionalEffect: message.system.additionalEffect,
+                  result: rowResultForEffect,
+                  targetActor,
+                })
+              }
             }
 
             // Mise à jour du message de chat
@@ -451,6 +478,50 @@ export default class ActionMessageData extends BaseMessageData {
             const targetUuid = event.currentTarget.dataset.targetUuid
             await OpposedRollHandler.spendDefenderLuckyPoint({ defenderActor, message, targetUuid })
           })
+        })
+      }
+
+      // Click sur le bouton "Appliquer les effets" (jets opposés sans dommages)
+      const applyEffectsBtn = html.querySelector(".apply-effects-btn")
+      if (applyEffectsBtn) {
+        applyEffectsBtn.addEventListener("click", async (event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          const messageId = event.currentTarget.closest(".message").dataset.messageId
+          if (!messageId) return
+          const message = game.messages.get(messageId)
+          if (message.system.effectsApplied) return
+
+          const customEffect = message.system.customEffect
+          const additionalEffect = message.system.additionalEffect
+          if (!customEffect || !additionalEffect?.active) return
+
+          const targetResults = message.system.targetResults ?? []
+          if (targetResults.length > 0) {
+            for (const tr of targetResults) {
+              if (tr.needsOppositeRoll) continue
+              const result = { isSuccess: tr.isSuccess, isFailure: tr.isFailure, isCritical: tr.isCritical, isFumble: tr.isFumble }
+              const targetActor = fromUuidSync(tr.uuid)
+              if (targetActor) {
+                await OpposedRollHandler.applyEffects({ customEffect, additionalEffect, result, targetActor })
+              }
+            }
+          } else {
+            const rolls = message.rolls
+            const result = CORoll.analyseRollResult(rolls[0])
+            for (const uuid of message.system.targets ?? []) {
+              const targetActor = fromUuidSync(uuid)
+              if (targetActor) {
+                await OpposedRollHandler.applyEffects({ customEffect, additionalEffect, result, targetActor })
+              }
+            }
+          }
+
+          if (game.user.isGM) {
+            await message.update({ "system.effectsApplied": true })
+          } else {
+            await game.users.activeGM.query("co2.updateMessageAfterOpposedRoll", { existingMessageId: message.id, effectsApplied: true })
+          }
         })
       }
 

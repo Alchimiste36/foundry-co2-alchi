@@ -43,4 +43,32 @@
       margin: 0;
     }
   }
+
+  .apply-effects-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 6px;
+    padding: 5px 10px;
+    font-size: var(--font-size-12);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border: 1px solid var(--color-chatAttack);
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--color-chatAttack) 12%, transparent);
+    color: var(--color-chatAttack);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-chatAttack) 25%, transparent);
+    }
+
+    i {
+      font-size: var(--font-size-11);
+    }
+  }
 }

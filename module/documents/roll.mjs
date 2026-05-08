@@ -714,6 +714,8 @@ export class COAttackRoll extends CORoll {
       tactical,
       opposeResult: this.options.opposeResult,
       opposeTooltip: this.options.opposeTooltip,
+      opposeHasLuckyPoints: this.options.opposeHasLuckyPoints ?? false,
+      opposeActorId: this.options.opposeActorId ?? null,
       formulaAttackTooltip: isPrivate ? "" : this.options.formulaAttackTooltip || "",
       formulaDamageTooltip: isPrivate ? "" : this.options.formulaDamageTooltip || "",
       targetResults: this.options.targetResults ?? [],

@@ -723,6 +723,7 @@
       "applyDoubleDamage": "Appliquer le double des dommages",
       "applyHealing": "Soigner du montant des dommages",
       "apply": "Appliquer",
+      "applyEffects": "Appliquer les effets",
       "targeted": "Ciblé",
       "selected": "Sélectionné",
       "noDamage": "Pas de dommages",
