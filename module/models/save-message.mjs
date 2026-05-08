@@ -289,6 +289,25 @@ export default class SaveMessageData extends BaseMessageData {
 
     details.appendChild(ul)
     targetsSection.appendChild(details)
+
+    // Bouton "Appliquer les effets" pour les sauvegardes sans dommages
+    const hasCustomEffect = message.system.customEffect && message.system.additionalEffect?.active
+    if (!hasDmg && hasCustomEffect && !message.system.effectsApplied) {
+      const hasResolvedSave = targetResults.some((tr) => !tr.needsSaveRoll)
+      if (hasResolvedSave) {
+        const canApply = game.user.isGM || (game.settings.get("co2", "allowPlayersToModifyTargets") && this.parent.isAuthor)
+        if (canApply) {
+          const section = document.createElement("section")
+          section.classList.add("save-apply-section")
+          const btn = document.createElement("button")
+          btn.type = "button"
+          btn.classList.add("save-apply-effects-btn")
+          btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> ${game.i18n.localize("CO.ui.applyEffects")}`
+          section.appendChild(btn)
+          targetsSection.insertAdjacentElement("afterend", section)
+        }
+      }
+    }
   }
 
   static getDefaultMultiplier(tr, halfDmgOnSave) {
@@ -360,14 +379,16 @@ export default class SaveMessageData extends BaseMessageData {
 
         const rolls = [...this.parent.rolls, resolved.roll]
 
-        // Si pas de DM, appliquer les effets immédiatement (comportement legacy)
+        // Si pas de DM, différer les effets au bouton "Appliquer les effets"
         if (!hasDmg) {
-          await SaveRollHandler.applyEffects({
-            customEffect: message.system.customEffect,
-            additionalEffect: message.system.additionalEffect,
-            result: resolved.rollResult,
-            targetActor,
-          })
+          if (message.system.effectsApplied) {
+            await SaveRollHandler.applyEffects({
+              customEffect: message.system.customEffect,
+              additionalEffect: message.system.additionalEffect,
+              result: resolved.rollResult,
+              targetActor,
+            })
+          }
         }
 
         await SaveRollHandler.updateMessage({ message, updateData: { rolls, "system.targetResults": newTargetResults } })
@@ -391,9 +412,46 @@ export default class SaveMessageData extends BaseMessageData {
         if (!message) return
 
         const targetUuid = btn.dataset.targetUuid
-        await SaveRollHandler.spendSaverLuckyPoint({ saverActor, message, targetUuid, deferEffects: hasDmg })
+        await SaveRollHandler.spendSaverLuckyPoint({ saverActor, message, targetUuid, deferEffects: true })
       })
     })
+
+    // Click sur le bouton "Appliquer les effets" (sauvegardes sans dommages)
+    const applyEffectsBtn = html.querySelector(".save-apply-effects-btn")
+    if (applyEffectsBtn) {
+      applyEffectsBtn.addEventListener("click", async (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        const messageId = event.currentTarget.closest(".message").dataset.messageId
+        if (!messageId) return
+        const message = game.messages.get(messageId)
+        if (message.system.effectsApplied) return
+
+        const customEffect = message.system.customEffect
+        const additionalEffect = message.system.additionalEffect
+        if (!customEffect || !additionalEffect?.active) return
+
+        const targetResults = message.system.targetResults ?? []
+        for (const tr of targetResults) {
+          if (tr.needsSaveRoll) continue
+          const result = { isSuccess: tr.isSuccess, isFailure: tr.isFailure, isCritical: tr.isCritical, isFumble: tr.isFumble, total: tr.total }
+          const targetActor = fromUuidSync(tr.uuid)
+          if (targetActor) {
+            await SaveRollHandler.applyEffects({ customEffect, additionalEffect, result, targetActor })
+          }
+        }
+
+        if (game.user.isGM) {
+          await message.update({ "system.effectsApplied": true })
+        } else {
+          await game.users.activeGM.query("co2.updateMessageAfterSavedRoll", {
+            existingMessageId: message.id,
+            targetResults: message.system.targetResults,
+            effectsApplied: true,
+          })
+        }
+      })
+    }
 
     // --- Listeners DM : multiplicateurs, DR, bouton Appliquer ---
     if (hasDmg && ((game.settings.get("co2", "allowPlayersToModifyTargets") && this.parent.isAuthor) || game.user.isGM)) {

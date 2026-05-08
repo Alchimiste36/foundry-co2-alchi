@@ -4771,6 +4771,33 @@ co-toggle-switch[checked] thumb {
 #interface #ui-right-column-1 .co.chat-card.roll-card.save-card .card-content .save-apply-section {
   padding: 4px 0;
 }
+#interface #sidebar .co.chat-card.roll-card.save-card .card-content .save-apply-section .save-apply-effects-btn,
+#interface #ui-right-column-1 .co.chat-card.roll-card.save-card .card-content .save-apply-section .save-apply-effects-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 10px;
+  font-size: var(--font-size-12);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border: 1px solid var(--color-chatSave);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-chatSave) 12%, transparent);
+  color: var(--color-chatSave);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+#interface #sidebar .co.chat-card.roll-card.save-card .card-content .save-apply-section .save-apply-effects-btn:hover,
+#interface #ui-right-column-1 .co.chat-card.roll-card.save-card .card-content .save-apply-section .save-apply-effects-btn:hover {
+  background: color-mix(in srgb, var(--color-chatSave) 25%, transparent);
+}
+#interface #sidebar .co.chat-card.roll-card.save-card .card-content .save-apply-section .save-apply-effects-btn i,
+#interface #ui-right-column-1 .co.chat-card.roll-card.save-card .card-content .save-apply-section .save-apply-effects-btn i {
+  font-size: var(--font-size-11);
+}
 #interface #sidebar .co.chat-card.roll-card.save-card .card-content .save-apply-section .save-apply-btn,
 #interface #ui-right-column-1 .co.chat-card.roll-card.save-card .card-content .save-apply-section .save-apply-btn {
   display: flex;
