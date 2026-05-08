@@ -13,35 +13,6 @@ strong,
 .strong {
   font-weight: 700;
 }
-prose-mirror,
-.prosemirror {
-  flex: 1;
-  max-width: 100%;
-  min-height: 50px;
-  max-height: 100%;
-  position: relative;
-}
-prose-mirror > button,
-.prosemirror > button {
-  display: none;
-}
-prose-mirror .editor-menu,
-.prosemirror .editor-menu {
-  padding: 4px;
-}
-prose-mirror:hover:not([open]) > button,
-.prosemirror:hover:not([open]) > button {
-  display: flex;
-}
-.co prose-mirror .editor-content,
-.co .prosemirror .editor-content {
-  position: relative;
-  white-space: wrap;
-}
-.co prose-mirror .editor-container,
-.co .prosemirror .editor-container {
-  overflow: hidden auto;
-}
 multi-select {
   margin-bottom: 4px;
   min-height: var(--input-height);
@@ -143,6 +114,35 @@ co-toggle-switch[checked] thumb {
 .co {
   --color-green: #44a12b;
   --color-grey: #c2b9b7;
+}
+.co prose-mirror,
+.co .prosemirror {
+  flex: 1;
+  max-width: 100%;
+  min-height: 50px;
+  max-height: 100%;
+  position: relative;
+}
+.co prose-mirror > button,
+.co .prosemirror > button {
+  display: none;
+}
+.co prose-mirror .editor-menu,
+.co .prosemirror .editor-menu {
+  padding: 4px;
+}
+.co prose-mirror:hover:not([open]) > button,
+.co .prosemirror:hover:not([open]) > button {
+  display: flex;
+}
+.co prose-mirror .editor-content,
+.co .prosemirror .editor-content {
+  position: relative;
+  white-space: wrap;
+}
+.co prose-mirror .editor-container,
+.co .prosemirror .editor-container {
+  overflow: hidden auto;
 }
 .co .enabled {
   color: var(--color-green);

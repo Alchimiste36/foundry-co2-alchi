@@ -1,3 +1,5 @@
+// Les éditeurs inline (biographie, propriétés) restent dans le flux
+// plutôt qu'en position absolue (comportement V14 pour les journaux)
 prose-mirror,
 .prosemirror {
   flex: 1;
@@ -21,16 +23,12 @@ prose-mirror,
   }
 }
 
-// Sur les fiches CO2, les éditeurs inline (biographie, propriétés) restent dans le flux
-// plutôt qu'en position absolue (comportement V14 pour les journaux)
-.co {
-  prose-mirror .editor-content,
-  .prosemirror .editor-content {
-    position: relative;
-    white-space: wrap;
-  }
-  prose-mirror .editor-container,
-  .prosemirror .editor-container {
-    overflow: hidden auto;
-  }
+prose-mirror .editor-content,
+.prosemirror .editor-content {
+  position: relative;
+  white-space: wrap;
+}
+prose-mirror .editor-container,
+.prosemirror .editor-container {
+  overflow: hidden auto;
 }

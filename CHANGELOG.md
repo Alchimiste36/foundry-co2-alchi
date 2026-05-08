@@ -1,4 +1,9 @@
 # 2.1.0
+## Corrections
+- Corrige la gestion des effets supplémentaires pour les jets opposés sans DM configurés
+- Les modifications css prose-mirror sont limités au système et ne touche plus l'interface de Foundry (zone de chat qui avait disparu)
+
+# 2.1.0
 ## Améliorations
 
 ### Attaques multi-cibles
