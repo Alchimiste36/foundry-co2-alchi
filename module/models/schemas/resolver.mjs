@@ -338,10 +338,10 @@ export class Resolver extends foundry.abstract.DataModel {
       customEffect = await this._createCustomEffect(actor, item, action)
     }
 
-    // Gestion des cibles — pour une sauvegarde, "aucune cible" est traitée comme "cible unique"
+    // Gestion des cibles — pour une sauvegarde, "aucune cible" ou "cible unique optionnelle" est traitée comme "cible unique"
     let targets
     let effectiveTargetType
-    if (this.target.type === SYSTEM.RESOLVER_TARGET.none.id) {
+    if (this.target.type === SYSTEM.RESOLVER_TARGET.none.id || (this.target.type === SYSTEM.RESOLVER_TARGET.single.id && this.target.number === 0)) {
       effectiveTargetType = SYSTEM.RESOLVER_TARGET.single.id
       targets = actor.acquireTargets(effectiveTargetType, this.target.scope, 1, action.actionName)
       if (targets.length === 0) {
@@ -349,7 +349,7 @@ export class Resolver extends foundry.abstract.DataModel {
         return false
       }
     } else {
-      effectiveTargetType = this.hasOptionalTargets() ? SYSTEM.RESOLVER_TARGET.none.id : this.target.type
+      effectiveTargetType = this.target.type
       targets = this.getResolverTargets(actor, action.actionName)
       if (this.shouldWarnMissingTargets(targets)) {
         ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))

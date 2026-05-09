@@ -1,3 +1,7 @@
+# 2.1.2
+## Corrections
+- Corrige les sauvegardes avec "cible unique" qui proposaient le jet au lanceur au lieu de la cible visée (#405)
+
 # 2.1.1
 ## Améliorations
 - Corrige la gestion des effets supplémentaires pour les jets opposés sans DM configurés
