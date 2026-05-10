@@ -3,6 +3,7 @@
 ## Corrections
 
 - Corrige le remplacement de dés d'évolution qui ne prenaient en compte que le premier de la formule (#85 sur le module)
+- Fréquence d'utilisation et charge : corrige l'utilisation d'une capacité qui ne consomme pas de charge
 
 # 2.1.2
 

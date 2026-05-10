@@ -710,8 +710,12 @@ export default class COActor extends Actor {
     }
 
     // Si la capacité a une fréquence d'utilisation, on vérifie si la capacité a encore des charges
+    // Sauf si l'action spécifique ne consomme pas de charge (noChargesUsed)
     if (state && item.type === SYSTEM.ITEM_TYPE.capacity.id && item.system.hasFrequency && !item.system.hasCharges) {
-      return ui.notifications.warn(game.i18n.localize("CO.notif.warningNoCharge"))
+      const actionToActivate = item.system.actions[indice]
+      if (!actionToActivate?.properties?.noChargesUsed) {
+        return ui.notifications.warn(game.i18n.localize("CO.notif.warningNoCharge"))
+      }
     }
 
     // TODO Incantation
