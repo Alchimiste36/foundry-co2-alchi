@@ -1,35 +1,51 @@
-# 2.1.2
+# 2.1.3
+
 ## Corrections
+
+- Corrige le remplacement de dés d'évolution qui ne prenaient en compte que le premier de la formule (#85 sur le module)
+
+# 2.1.2
+
+## Corrections
+
 - Corrige les sauvegardes avec "cible unique" qui proposaient le jet au lanceur au lieu de la cible visée (#405)
 
 # 2.1.1
+
 ## Améliorations
+
 - Corrige la gestion des effets supplémentaires pour les jets opposés sans DM configurés
 - Corrige la gestion des effets supplémentaires pour les jets de sauvegarde sans DM configurés
 
 ## Corrections
+
 - Les modifications css prose-mirror sont limités au système et ne touche plus l'interface de Foundry (zone de chat qui avait disparu)
 
 # 2.1.0
+
 ## Améliorations
 
 ### Attaques multi-cibles
+
 - Chaque cible est désormais évaluée individuellement lors d'un jet d'attaque : la Défense de chaque cible est comparée au résultat pour déterminer le succès ou l'échec
 - Le message d'attaque affiche la liste des cibles avec une icône colorée indiquant le résultat individuel (succès, critique, échec, fumble)
 - L'utilisation d'un Point de Chance recalcule les résultats individuellement pour chaque cible
 
 ### Jets opposés par cible
+
 - Un bouton "Jet opposé" apparaît pour chaque cible dans le message d'attaque
 - Chaque défenseur effectue son propre jet en opposition indépendamment
 - Le défenseur peut utiliser un Point de Chance pour augmenter son jet de 10 points
 
 ### Jets de sauvegarde multi-cibles
+
 - Les jets de sauvegarde sont résolus cible par cible, chacune avec son propre résultat
 - Chaque cible peut dépenser un Point de Chance sur sa sauvegarde
 - Ajout d'une formule de Dommages optionnelle sur la résolution de type Sauvegarde
 - Ajout de l'option "Dommages moitié sur réussite" pour les sauvegardes
 
 ### Carte de Dommages
+
 - Deux modes d'application : "Ciblées" (cibles de l'attaque) et "Sélectionnées" (tokens sélectionnés manuellement sur la scène)
 - Multiplicateurs individuels par cible : Soin, ×0, ×½, ×1, ×2
 - Réduction de Dommages (RD) gérée individuellement par cible
@@ -38,33 +54,41 @@
 - Les choix de multiplicateurs et de RD sont conservés si le message est rafraîchi
 
 ### Effets et conditions
+
 - Les effets additionnels d'une attaque sont désormais appliqués individuellement à chaque cible touchée
 - Ajout du statut "Autre" pour les effets particuliers qui ne correspondent à aucun état existant
 
 ### Buff/Debuff
+
 - Les Buff/Debuff peuvent désormais fonctionner avec uniquement des Statuts et/ou une Durée, sans nécessiter obligatoirement des Modificateurs de statistiques
 
 ### Cibles
+
 - Le nombre de cibles "0" en mode Multiple signifie désormais un nombre de cibles illimité
 
 ### Visuel des cartes de chat
+
 - Nouveau design des cartes d'attaque, de dommages et de sauvegarde avec l'image et le nom de l'objet utilisé en en-tête
 - Sections dépliables pour les détails des jets et la liste des cibles
 - Portraits circulaires et icônes colorées pour les résultats par cible
 
 ### Confidentialité
+
 - Si un joueur fait un jet privé (whisper au MJ), le message de dommages associé hérite automatiquement de la même visibilité
 
 ### Options du système
+
 - Suppression de l'option "Ne pas utiliser ni afficher la difficulté" — la difficulté est désormais toujours affichée (pour tout le monde ou uniquement au MJ)
 - Suppression de l'option "Afficher les boutons de Dommages pour tout le monde" — remplacée par le nouveau système intégré de gestion des cibles
 - L'option "Autoriser les joueurs à modifier les cibles" contrôle désormais l'accès aux contrôles de la carte de Dommages
 
 ### Bonus de compétence
+
 - Le dialogue d'attaque propose de sélectionner des bonus de compétence applicables au jet
 - Prise en compte des compétences pour les attaques basées sur les caractéristiques
 
 ## Corrections
+
 - Correction du calcul des dommages temporaires : la Force de la cible est désormais correctement soustraite du total
 - Correction de la double application des effets additionnels (always/critical + jet opposé)
 - Correction de la formule invalide lorsque plusieurs modificateurs avec dés sont combinés
@@ -72,54 +96,67 @@
 - Correction de la gestion de @Test depuis un journal dont la fenêtre a été détachée
 
 # 2.0.2
+
 ## Corrections
+
 - Corrige le retour à la ligne automatique manquant dans les descriptions
 
 # 2.0.1
+
 ## Corrections
+
 - Compatibilité V14 : game.settings.get("core", "rollMode") remplacé par game.settings.get("core", "messageMode")
 - Corrige l'absence de scrollbar dans les journaux
 
 # 2.0.0
+
 - Compatibilité Foundry V14
 
 # 1.6.5
 
 ## Améliorations
+
 - Tooltip des formules dans le chat : les messages d'attaque et de dégâts affichent maintenant un tooltip sur la ligne de formule dans le footer, permettant au MJ de vérifier les formules utilisées par les joueurs (bonus, malus, capacités activées). ([#395](https://github.com/BlackBookEditions/foundry-co2/issues/395))
 
 ## Corrections
+
 - Modificateurs Dé Bonus et Dé Malus pour les jets d'attaque : les modificateurs de type Dé Bonus/Malus ne s'appliquaient pas aux jets d'attaque. Trois causes corrigées : le dropdown de cible était vide sur les fiches de profil et de trait (filtre incorrect), le type d'attaque magique n'était pas reconnu (mismatch "magical" vs "magic"), et la formule d'attaque était écrasée par le tooltip avant la détection du type d'attaque.
 
 # 1.6.4
 
 ## Corrections
+
 - L'état affaibli donne maintenant un dé de malus pour les trois types d'attaque
 
 # 1.6.3
 
 ## Corrections
+
 - Modificateurs des actions activables avec conditions : pour les actions activables (temporaires ou non) possédant des conditions (ex : `isLearned`), les modificateurs n'étaient vérifiés que sur les conditions et ignoraient le flag `enabled`. Cela provoquait l'application permanente des bonus dès l'acquisition de la capacité (ex : bonus d'attaque et DM de Feinte actifs en permanence). Les conditions contrôlent désormais la visibilité du bouton, et `enabled` contrôle l'activation effective des modificateurs.
 
 # 1.6.2
 
 ## Améliorations
+
 - Fiche Personnage et Rencontre : ajout d'un bouton sur le portrait pour partager l'image avec tous les joueurs connectés (visible au survol)
 - Fiche Personnage : les icônes de Peuple et de Profil dans l'en-tête sont cliquables pour ouvrir la fiche de l'objet correspondant, en mode Lecture comme en Écriture
 - Fiche Personnage - Biographie : Taille et Langages sont affichés sur la même ligne dans la section Divers
 - Fiche Personnage - Biographie : en mode Lecture, les blocs Publique et Privée de Biographie et Apparence ne sont affichés que s'ils contiennent du texte
 
 ## Corrections
+
 - Conditions des actions d'équipement : les conditions (est possédé, est équipé, etc.) définies sur les actions d'un équipement sont maintenant évaluées lors de la collecte des modificateurs. Auparavant, seul le flag `enabled` était vérifié et les conditions étaient ignorées, ce qui empêchait les bonus conditionnels de s'appliquer aux jets de compétences.
 
 # 1.6.1
 
 ## Corrections
+
 - Le Groupe de joueurs est maintenant accessible uniquement au MJ
 
 # 1.6.0
 
 ## Améliorations
+
 - Info-bulles des bonus : les info-bulles listant des bonus (caractéristiques, combat, initiative, défense, critique, RD, PV, ressources) sont maintenant affichées en colonne au lieu d'être en ligne, pour une meilleure lisibilité.
 - Transfert d'objets empilables : SHIFT + glisser-déposer permet de transférer une seule unité d'un objet empilable entre personnages ou rencontres. La quantité est décrémentée sur l'acteur source et incrémentée sur l'acteur cible. Sans SHIFT, le comportement reste inchangé (transfert complet).
 - Nettoyage : suppression de 7 helpers Handlebars inutilisés (isPathProfile, isset, sum, getValueFromMartialTraining, buildItemTemplatePath, isActionable, isEnabled)
@@ -129,6 +166,7 @@
 - Ajout d'un menu Groupe de joueurs pour visualiser les personnages des joueurs connectés. Un clic sur une entête de caractéristique demander un jet à tout le monde. un clic sur la valeur d'une caractéristique d'un personnage lui demande un jet.
 
 ## Corrections
+
 - Fiche d'objet : correction d'un bug où appuyer sur ENTER après avoir modifié le nom d'un équipement supprimait la résolution de l'action
 - Rencontres : correction des modificateurs de dommages avec formule de dés (ex : +1d6) qui étaient ignorés pour les attaques de rencontre (retournaient 0 au lieu de la formule)
 - Fiche d'objet : la section "Propriétés (DEBUG)" dans l'onglet Actions/Effets n'est maintenant visible que si l'option DEBUG du système est activée
@@ -136,18 +174,20 @@
 # 1.5.2
 
 ## Améliorations
+
 - Points de chance : le bouton pour utiliser un point de chance (+10) est maintenant affiché même lorsque la difficulté n'est pas gérée. Il suffit que le personnage ait des points de chance et que ce ne soit pas un critique.
 - Jet de chance : le message affiché dans le chat utilise maintenant la même mise en forme que les jets de caractéristique.
 
 ## Corrections
+
 - Capacités de soin : correction de la consommation des points de mana qui n'était pas effectuée lors de l'activation d'un sort de soin
 
 # 1.5.1
 
 ## Améliorations
-- Ajout d'une durée 'instantanée' sur les effets supplémentaires pour appliquer un effet supplémentaire sans durée qui s'applique tout de suite. Attention : il convient pour des dommages ou des soins, mais si vous l'utilisez sur des statuts (ex : empoisonné) la durée ne sera plus gérée. Cette durée peut être activée hors combat.
-- Effets supplémentaires : possibilité de choisir parmi les statuts à appliquer  (issue [#163](https://github.com/BlackBookEditions/foundry-co2/issues/163))
 
+- Ajout d'une durée 'instantanée' sur les effets supplémentaires pour appliquer un effet supplémentaire sans durée qui s'applique tout de suite. Attention : il convient pour des dommages ou des soins, mais si vous l'utilisez sur des statuts (ex : empoisonné) la durée ne sera plus gérée. Cette durée peut être activée hors combat.
+- Effets supplémentaires : possibilité de choisir parmi les statuts à appliquer (issue [#163](https://github.com/BlackBookEditions/foundry-co2/issues/163))
 
 ## Corrections
 
