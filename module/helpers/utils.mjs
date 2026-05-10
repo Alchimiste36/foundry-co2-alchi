@@ -124,7 +124,7 @@ export default class Utils {
    * Retourne `null` si la cible ne peut pas être résolue.
    *
    * @param {string} targetUuid UUID de la cible stocké dans le message.
-  * @returns {{uuid: string, document: Document|null, actor: Actor|null, tokenDocument: TokenDocument|null, token: Token|null, scene: Scene|null, canObserve: boolean, canLocate: boolean, canControl: boolean}|null}
+   * @returns {{uuid: string, document: Document|null, actor: Actor|null, tokenDocument: TokenDocument|null, token: Token|null, scene: Scene|null, canObserve: boolean, canLocate: boolean, canControl: boolean}|null}
    */
   static resolveChatTargetReference(targetUuid) {
     if (!targetUuid) return null
@@ -249,7 +249,6 @@ export default class Utils {
    */
   static evaluateFormulaCustomValues(actor, formula, sourceUuid = null) {
     let replacedFormula = foundry.utils.duplicate(formula)
-
     // @nivmod[niv, mod] permet de dire par exemple +1 au niveau 10
     if (replacedFormula.includes("@nivmod")) {
       replacedFormula = this._replaceLevelModValue(actor, replacedFormula)
@@ -301,11 +300,11 @@ export default class Utils {
   static _replaceEvolvingDice(actor, content) {
     let result
     const level = actor.type === "character" ? actor.system.attributes.level : actor.system.attributes.nc
-    if (level < 6) result = content.replace("d4°", "d4")
-    else if (level <= 8) result = content.replace("d4°", "d6")
-    else if (level <= 11) result = content.replace("d4°", "d8")
-    else if (level <= 14) result = content.replace("d4°", "d10")
-    else result = content.replace("d4°", "d12")
+    if (level < 6) result = content.replaceAll("d4°", "d4")
+    else if (level <= 8) result = content.replaceAll("d4°", "d6")
+    else if (level <= 11) result = content.replaceAll("d4°", "d8")
+    else if (level <= 14) result = content.replaceAll("d4°", "d10")
+    else result = content.replaceAll("d4°", "d12")
     return result
   }
 
@@ -425,6 +424,8 @@ export default class Utils {
             if (path && path.system.rank >= rank) compteur += 1
           })
           content = content.includes("@allrank") ? content.replace(`@allrank[${targetRank}]`, compteur) : content.replace(`@toutrang[${targetRank}]`, compteur)
+        } else {
+          console.error("_replaceAllRank - Le profil principale du personnage n'a pas pu être récupéré")
         }
       }
     }
@@ -520,43 +521,45 @@ export default class Utils {
    * @returns {Array} Un tableau d'objets { uuid, name, img, difficulty, isSuccess, isFailure, isCritical, isFumble, needsOppositeRoll }.
    */
   static computeTargetResults(targets, rawDifficulty, rollTotal, attackResult = {}) {
-    return targets.map((target) => {
-      const uuid = target.uuid
-      const name = target.name
-      const img = target.token?.document?.texture?.src ?? target.actor?.img ?? null
-      if (rawDifficulty && rawDifficulty.includes("@oppose")) {
+    return targets
+      .map((target) => {
+        const uuid = target.uuid
+        const name = target.name
+        const img = target.token?.document?.texture?.src ?? target.actor?.img ?? null
+        if (rawDifficulty && rawDifficulty.includes("@oppose")) {
+          return {
+            uuid,
+            name,
+            img,
+            difficulty: null,
+            isSuccess: false,
+            isFailure: false,
+            isCritical: false,
+            isFumble: false,
+            needsOppositeRoll: true,
+          }
+        }
+        let evaluatedDifficulty = null
+        if (rawDifficulty) {
+          try {
+            let formula = rawDifficulty.replace(/@cible\./g, "@")
+            formula = Roll.replaceFormulaData(formula, target.actor.getRollData())
+            const evalResult = eval(formula)
+            evaluatedDifficulty = parseInt(evalResult)
+            if (isNaN(evaluatedDifficulty)) evaluatedDifficulty = null
+          } catch (e) {
+            evaluatedDifficulty = null
+          }
+        }
         return {
           uuid,
           name,
           img,
-          difficulty: null,
-          isSuccess: false,
-          isFailure: false,
-          isCritical: false,
-          isFumble: false,
-          needsOppositeRoll: true,
+          ...Utils._computeOutcome(evaluatedDifficulty, rollTotal, attackResult),
+          needsOppositeRoll: false,
         }
-      }
-      let evaluatedDifficulty = null
-      if (rawDifficulty) {
-        try {
-          let formula = rawDifficulty.replace(/@cible\./g, "@")
-          formula = Roll.replaceFormulaData(formula, target.actor.getRollData())
-          const evalResult = eval(formula)
-          evaluatedDifficulty = parseInt(evalResult)
-          if (isNaN(evaluatedDifficulty)) evaluatedDifficulty = null
-        } catch (e) {
-          evaluatedDifficulty = null
-        }
-      }
-      return {
-        uuid,
-        name,
-        img,
-        ...Utils._computeOutcome(evaluatedDifficulty, rollTotal, attackResult),
-        needsOppositeRoll: false,
-      }
-    }).sort((a, b) => (b.difficulty ?? 0) - (a.difficulty ?? 0))
+      })
+      .sort((a, b) => (b.difficulty ?? 0) - (a.difficulty ?? 0))
   }
 
   /**
