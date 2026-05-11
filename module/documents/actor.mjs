@@ -1616,7 +1616,7 @@ export default class COActor extends Actor {
 
     // Gestion de la visibilité du jet
     if (rollMode === undefined) {
-      rollMode = game.settings.get("core", "messageMode") 
+      rollMode = game.settings.get("core", "messageMode")
     }
 
     // Gestion de la difficulté
@@ -1800,6 +1800,47 @@ export default class COActor extends Actor {
       return { roll, result }
     }
   }
+  /**
+   * Permet de savoir si on a un dé bonus (resultat > 0) ou un dé malus (résultat < 0) ou aucun des deux (résultat = 0)
+   * @param {String} actionType peux etre un type d'attaque ou une caractéristique pour un jet de compétence : atm atd atc per int ....
+   * @returns {integer} Une valeur entiere
+   */
+  async getBonusDiceForOppositeRoll(actionType) {
+    // Gestion des dés bonus et malus
+    let bonusDices = 0
+    let malusDices = 0
+    let subType = undefined
+
+    switch (actionType) {
+      case "atc":
+        subType = SYSTEM.ACTION_TYPES.melee.id
+        break
+      case "atm":
+        subType = SYSTEM.ACTION_TYPES.magical.id
+        break
+      case "atd":
+        subType = SYSTEM.ACTION_TYPES.ranged.id
+        break
+      default:
+        subType = actionType
+        break
+    }
+
+    // Gestion du dé bonus : en fonction de la formule originale, on déduit le type d'attaque et on cherche dans les modifiers
+    if (this.system.hasBonusDiceForAttack(subType)) bonusDices += 1
+    // Gestion du dé malus : en fonction de la formule originale, on déduit le type d'attaque et on cherche dans les modifiers
+    if (this.system.hasMalusDiceForAttack(subType)) malusDices += 1
+
+    // Immobilisé : dé malus aux tests d'attaque
+    if (this.isImmobilized) malusDices += 1
+
+    // Affaibli : dé malus à tous les tests (y compris attaque)
+    if (this.isWeakened) malusDices += 1
+
+    const totalDices = bonusDices - malusDices
+
+    return totalDices
+  }
 
   /**
    * Lance un jet d'attaque
@@ -1912,7 +1953,7 @@ export default class COActor extends Actor {
 
     // Gestion de la visibilité du jet
     if (rollMode === undefined) {
-      rollMode = game.settings.get("core", "messageMode") 
+      rollMode = game.settings.get("core", "messageMode")
     }
 
     // Gestion de la difficulté
@@ -2237,7 +2278,17 @@ export default class COActor extends Actor {
           speaker,
           style: CONST.CHAT_MESSAGE_STYLES.OTHER,
           type: "action",
-          system: { subtype: "attack", targets: targetsUuid, targetResults, result: results[0], linkedRoll, customEffect: effectiveCustomEffect, additionalEffect, selectedStatuses, oppositeValue: oppositeRoll ? difficultyTooltip : null },
+          system: {
+            subtype: "attack",
+            targets: targetsUuid,
+            targetResults,
+            result: results[0],
+            linkedRoll,
+            customEffect: effectiveCustomEffect,
+            additionalEffect,
+            selectedStatuses,
+            oppositeValue: oppositeRoll ? difficultyTooltip : null,
+          },
         },
         { messageMode: rolls[0].options.rollMode },
       )
@@ -2317,7 +2368,7 @@ export default class COActor extends Actor {
       return false
     }
 
-    const rollMode = roll.options.rollMode ?? game.settings.get("core", "messageMode") 
+    const rollMode = roll.options.rollMode ?? game.settings.get("core", "messageMode")
 
     await roll.toMessage(
       {

@@ -33,7 +33,22 @@ export default class OpposedRollHandler {
       flavor = roll.options.flavor
     } else {
       const value = Utils.evaluateOppositeFormula(oppositeValue, targetActor)
-      const formula = value ? `1d20 + ${value}` : `1d20`
+
+      // Gestion des dés malus et bonus sur les jets en opposition
+      let totalDice = 0
+
+      if (oppositeValue.includes("@oppose")) {
+        const regex = /@oppose\.([^\s]+)/
+        const match = oppositeValue.match(regex)
+
+        if (match) {
+          totalDice = await targetActor.getBonusDiceForOppositeRoll(match[1])
+        }
+      }
+      let dice = "1d20"
+      if (totalDice > 0) dice = "2d20kh"
+      if (totalDice < 0) dice = "2d20kl"
+      const formula = value ? `${dice} + ${value}` : dice
       roll = await new Roll(formula).roll()
       resultAnalysis = CORoll.analyseRollResult(roll)
       resultStr = roll.result
@@ -106,10 +121,7 @@ export default class OpposedRollHandler {
       damageSystem.customEffect = customEffect
       damageSystem.additionalEffect = additionalEffect
     }
-    await damageRoll.toMessage(
-      { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: damageSystem, speaker },
-      { messageMode: rollMode },
-    )
+    await damageRoll.toMessage({ style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: damageSystem, speaker }, { messageMode: rollMode })
   }
 
   /**
@@ -144,10 +156,7 @@ export default class OpposedRollHandler {
       damageSystem.customEffect = customEffect
       damageSystem.additionalEffect = additionalEffect
     }
-    const msg = await damageRoll.toMessage(
-      { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: damageSystem, speaker },
-      { messageMode: rollMode },
-    )
+    const msg = await damageRoll.toMessage({ style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: damageSystem, speaker }, { messageMode: rollMode })
     return msg.id
   }
 

@@ -4,6 +4,7 @@
 
 - Corrige le remplacement de dés d'évolution qui ne prenaient en compte que le premier de la formule (#85 sur le module)
 - Fréquence d'utilisation et charge : corrige l'utilisation d'une capacité qui ne consomme pas de charge
+- Corrige les jets opposés pour prendre en compte les dés bonus / dés malus (#85 du module)
 
 # 2.1.2
 
