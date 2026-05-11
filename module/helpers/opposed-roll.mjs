@@ -35,19 +35,23 @@ export default class OpposedRollHandler {
       const value = Utils.evaluateOppositeFormula(oppositeValue, targetActor)
 
       // Gestion des dés malus et bonus sur les jets en opposition
-      let totalDice = 0
+      let totalDice = targetActor.getBonusDiceForOppositeRoll(abilityId)
 
-      if (oppositeValue.includes("@oppose")) {
-        const regex = /@oppose\.([^\s]+)/
-        const match = oppositeValue.match(regex)
-
-        if (match) {
-          totalDice = await targetActor.getBonusDiceForOppositeRoll(match[1])
+      let dice = "1d20"
+      if (abilityId) {
+        const attackType = Utils.getAttackTypeFromFormula("@" + abilityId)
+        if (attackType) {
+          let bonusDices = 0
+          let malusDices = 0
+          if (targetActor.system.hasBonusDiceForAttack(attackType)) bonusDices += 1
+          if (targetActor.system.hasMalusDiceForAttack(attackType)) malusDices += 1
+          if (targetActor.isImmobilized) malusDices += 1
+          if (targetActor.isWeakened) malusDices += 1
+          const totalDices = bonusDices - malusDices
+          if (totalDices > 0) dice = "2d20kh"
+          if (totalDices < 0) dice = "2d20kl"
         }
       }
-      let dice = "1d20"
-      if (totalDice > 0) dice = "2d20kh"
-      if (totalDice < 0) dice = "2d20kl"
       const formula = value ? `${dice} + ${value}` : dice
       roll = await new Roll(formula).roll()
       resultAnalysis = CORoll.analyseRollResult(roll)
