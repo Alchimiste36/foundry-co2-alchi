@@ -34,9 +34,6 @@ export default class OpposedRollHandler {
     } else {
       const value = Utils.evaluateOppositeFormula(oppositeValue, targetActor)
 
-      // Gestion des dés malus et bonus sur les jets en opposition
-      let totalDice = targetActor.getBonusDiceForOppositeRoll(abilityId)
-
       let dice = "1d20"
       if (abilityId) {
         const attackType = Utils.getAttackTypeFromFormula("@" + abilityId)
