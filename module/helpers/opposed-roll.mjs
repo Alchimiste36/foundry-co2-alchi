@@ -33,7 +33,23 @@ export default class OpposedRollHandler {
       flavor = roll.options.flavor
     } else {
       const value = Utils.evaluateOppositeFormula(oppositeValue, targetActor)
-      const formula = value ? `1d20 + ${value}` : `1d20`
+
+      let dice = "1d20"
+      if (abilityId) {
+        const attackType = Utils.getAttackTypeFromFormula("@" + abilityId)
+        if (attackType) {
+          let bonusDices = 0
+          let malusDices = 0
+          if (targetActor.system.hasBonusDiceForAttack(attackType)) bonusDices += 1
+          if (targetActor.system.hasMalusDiceForAttack(attackType)) malusDices += 1
+          if (targetActor.isImmobilized) malusDices += 1
+          if (targetActor.isWeakened) malusDices += 1
+          const totalDices = bonusDices - malusDices
+          if (totalDices > 0) dice = "2d20kh"
+          if (totalDices < 0) dice = "2d20kl"
+        }
+      }
+      const formula = value ? `${dice} + ${value}` : dice
       roll = await new Roll(formula).roll()
       resultAnalysis = CORoll.analyseRollResult(roll)
       resultStr = roll.result
@@ -106,10 +122,7 @@ export default class OpposedRollHandler {
       damageSystem.customEffect = customEffect
       damageSystem.additionalEffect = additionalEffect
     }
-    await damageRoll.toMessage(
-      { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: damageSystem, speaker },
-      { messageMode: rollMode },
-    )
+    await damageRoll.toMessage({ style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: damageSystem, speaker }, { messageMode: rollMode })
   }
 
   /**
@@ -144,10 +157,7 @@ export default class OpposedRollHandler {
       damageSystem.customEffect = customEffect
       damageSystem.additionalEffect = additionalEffect
     }
-    const msg = await damageRoll.toMessage(
-      { style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: damageSystem, speaker },
-      { messageMode: rollMode },
-    )
+    const msg = await damageRoll.toMessage({ style: CONST.CHAT_MESSAGE_STYLES.OTHER, type: "action", system: damageSystem, speaker }, { messageMode: rollMode })
     return msg.id
   }
 

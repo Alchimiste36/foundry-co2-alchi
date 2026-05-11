@@ -1616,7 +1616,7 @@ export default class COActor extends Actor {
 
     // Gestion de la visibilité du jet
     if (rollMode === undefined) {
-      rollMode = game.settings.get("core", "messageMode") 
+      rollMode = game.settings.get("core", "messageMode")
     }
 
     // Gestion de la difficulté
@@ -1912,7 +1912,7 @@ export default class COActor extends Actor {
 
     // Gestion de la visibilité du jet
     if (rollMode === undefined) {
-      rollMode = game.settings.get("core", "messageMode") 
+      rollMode = game.settings.get("core", "messageMode")
     }
 
     // Gestion de la difficulté
@@ -2237,7 +2237,17 @@ export default class COActor extends Actor {
           speaker,
           style: CONST.CHAT_MESSAGE_STYLES.OTHER,
           type: "action",
-          system: { subtype: "attack", targets: targetsUuid, targetResults, result: results[0], linkedRoll, customEffect: effectiveCustomEffect, additionalEffect, selectedStatuses, oppositeValue: oppositeRoll ? difficultyTooltip : null },
+          system: {
+            subtype: "attack",
+            targets: targetsUuid,
+            targetResults,
+            result: results[0],
+            linkedRoll,
+            customEffect: effectiveCustomEffect,
+            additionalEffect,
+            selectedStatuses,
+            oppositeValue: oppositeRoll ? difficultyTooltip : null,
+          },
         },
         { messageMode: rolls[0].options.rollMode },
       )
@@ -2317,7 +2327,7 @@ export default class COActor extends Actor {
       return false
     }
 
-    const rollMode = roll.options.rollMode ?? game.settings.get("core", "messageMode") 
+    const rollMode = roll.options.rollMode ?? game.settings.get("core", "messageMode")
 
     await roll.toMessage(
       {
