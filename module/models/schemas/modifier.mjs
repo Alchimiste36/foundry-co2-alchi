@@ -21,6 +21,7 @@ export class Modifier extends foundry.abstract.DataModel {
       target: new fields.StringField({ required: true, choices: SYSTEM.MODIFIERS_TARGET, initial: "agi" }),
       apply: new fields.StringField({ required: true, choices: SYSTEM.MODIFIERS_APPLY, initial: "self" }),
       value: new fields.StringField({ required: true, initial: "0" }),
+      choiceGroup: new fields.NumberField({ required: true, initial: 0, integer: true, min: 0 }),
       additionalInfos: new fields.StringField({ required: true, blank: true }), // Initial value is an empty string
     }
   }

@@ -1208,6 +1208,41 @@ co-toggle-switch[checked] thumb {
   color: #b3b4b5;
   text-align: left;
 }
+.co.application.dialog.feature-modifier-choice-dialog .window-content {
+  padding: 10px;
+}
+.co.application.dialog.feature-modifier-choice-dialog .window-content .feature-modifier-choice .hint {
+  font-style: italic;
+  margin-bottom: 10px;
+}
+.co.application.dialog.feature-modifier-choice-dialog .window-content .feature-modifier-choice .choice-group-fieldset {
+  border: 1px solid var(--color-border-light-2);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+.co.application.dialog.feature-modifier-choice-dialog .window-content .feature-modifier-choice .choice-group-fieldset legend {
+  font-weight: bold;
+  font-size: var(--font-size-14);
+  padding: 0 6px;
+}
+.co.application.dialog.feature-modifier-choice-dialog .window-content .feature-modifier-choice .choice-group-fieldset .choice-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.co.application.dialog.feature-modifier-choice-dialog .window-content .feature-modifier-choice .choice-group-fieldset .choice-option input[type="radio"] {
+  margin: 0;
+}
+.co.application.dialog.feature-modifier-choice-dialog .window-content .feature-modifier-choice .choice-group-fieldset .choice-option .option-value {
+  font-weight: bold;
+  min-width: 40px;
+}
+.co.application.dialog.feature-modifier-choice-dialog .window-content .feature-modifier-choice .choice-group-fieldset .choice-option .option-target {
+  color: var(--color-text-dark-secondary);
+}
 .co.application.sheet {
   --color-primary: var(--color-text-selection-bg);
 }

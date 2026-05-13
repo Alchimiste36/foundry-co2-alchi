@@ -980,7 +980,13 @@
       },
       "restHpRecovered": "Vous avez récupéré {hp} points de vigueur",
       "healRecovered": "PV soigné(s)",
-      "healTooltip": "Le soin est appliqué directement sur la cible"
+      "healTooltip": "Le soin est appliqué directement sur la cible",
+      "featureModifierChoice": {
+        "title": "Choix des bonus du trait",
+        "hint": "Sélectionnez un bonus pour chaque groupe de choix.",
+        "validate": "Valider",
+        "cancel": "Annuler"
+      }
     },
     "roll": {
       "visibility": "Jet visible par",
@@ -1087,6 +1093,12 @@
         "self": "Soi-même",
         "others": "Les autres",
         "both": "Les deux"
+      },
+      "choiceGroup": {
+        "none": "—",
+        "group1": "Choix 1",
+        "group2": "Choix 2",
+        "group3": "Choix 3"
       }
     },
     "resolver": {

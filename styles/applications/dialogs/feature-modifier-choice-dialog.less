@@ -1,0 +1,46 @@
+&.feature-modifier-choice-dialog {
+  .window-content {
+    padding: 10px;
+
+    .feature-modifier-choice {
+      .hint {
+        font-style: italic;
+        margin-bottom: 10px;
+      }
+
+      .choice-group-fieldset {
+        border: 1px solid var(--color-border-light-2);
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+
+        legend {
+          font-weight: bold;
+          font-size: var(--font-size-14);
+          padding: 0 6px;
+        }
+
+        .choice-option {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 4px 0;
+          cursor: pointer;
+
+          input[type="radio"] {
+            margin: 0;
+          }
+
+          .option-value {
+            font-weight: bold;
+            min-width: 40px;
+          }
+
+          .option-target {
+            color: var(--color-text-dark-secondary);
+          }
+        }
+      }
+    }
+  }
+}

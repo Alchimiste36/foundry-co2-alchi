@@ -86,6 +86,7 @@ export default class CoFeatureSheet extends CoBaseItemSheet {
           Object.entries(SYSTEM.MODIFIERS.MODIFIERS_TARGET).filter(([key, value]) => value.id !== "all" && (value.subtype === "ability" || value.subtype === "attack")),
         )
         context.choiceModifierApplies = SYSTEM.MODIFIERS.MODIFIERS_APPLY
+        context.choiceModifierGroups = SYSTEM.MODIFIERS.MODIFIERS_CHOICE_GROUP
         break
     }
     return context

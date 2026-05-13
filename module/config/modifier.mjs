@@ -229,6 +229,25 @@ export const MODIFIERS_TARGET = Object.freeze({
   },
 })
 
+export const MODIFIERS_CHOICE_GROUP = Object.freeze({
+  0: {
+    id: 0,
+    label: "CO.modifier.choiceGroup.none",
+  },
+  1: {
+    id: 1,
+    label: "CO.modifier.choiceGroup.group1",
+  },
+  2: {
+    id: 2,
+    label: "CO.modifier.choiceGroup.group2",
+  },
+  3: {
+    id: 3,
+    label: "CO.modifier.choiceGroup.group3",
+  },
+})
+
 export const MODIFIERS_APPLY = Object.freeze({
   self: {
     id: "self",
