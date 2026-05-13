@@ -1248,6 +1248,15 @@ export default class COActor extends Actor {
     }
 
     let itemData = profile.toObject()
+
+    const hasChoiceGroups = itemData.system.modifiers.some((m) => m.choiceGroup > 0)
+    if (hasChoiceGroups) {
+      const selectedIndices = await CoFeatureModifierChoiceDialog.choose(itemData.system.modifiers)
+      if (!selectedIndices) return
+      itemData.system.modifiers = selectedIndices.map((i) => itemData.system.modifiers[i])
+      itemData.system.modifiers.forEach((m) => (m.choiceGroup = 0))
+    }
+
     // C'est le profil principal
     if (this.profiles.length === 0) {
       itemData.system.mainProfile = true

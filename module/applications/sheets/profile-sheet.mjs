@@ -73,6 +73,7 @@ export default class CoProfileSheet extends CoBaseItemSheet {
       Object.entries(SYSTEM.MODIFIERS.MODIFIERS_TARGET).filter(([key, value]) => value.id !== "all" && (value.subtype === "ability" || value.subtype === "attack")),
     )
     context.choiceModifierApplies = SYSTEM.MODIFIERS.MODIFIERS_APPLY
+    context.choiceModifierGroups = SYSTEM.MODIFIERS.MODIFIERS_CHOICE_GROUP
 
     if (CONFIG.debug.co2?.sheets) console.debug(Utils.log(`CoProfileSheet - context`), context)
     return context
