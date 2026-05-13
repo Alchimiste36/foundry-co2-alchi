@@ -317,7 +317,7 @@ export default class Utils {
       if (curseur < 0) curseur = 0
     }
 
-    result = content.replaceAll("d4°", SYSTEM.EVOLVINGDICE[curseur])
+    result = content.replaceAll("d4°", SYSTEM.EVOLVING_DICES[curseur])
     return result
   }
 
