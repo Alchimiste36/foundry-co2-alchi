@@ -2,6 +2,7 @@ import { SYSTEM } from "../config/system.mjs"
 import { Modifier } from "../models/schemas/modifier.mjs"
 import CustomEffectData from "../models/schemas/custom-effect.mjs"
 import { CORoll, COSkillRoll, COAttackRoll, COHealRoll } from "./roll.mjs"
+import { CoFeatureModifierChoiceDialog } from "../dialogs/feature-modifier-choice-dialog.mjs"
 import CoChat from "../chat.mjs"
 import Utils from "../helpers/utils.mjs"
 
@@ -1171,6 +1172,15 @@ export default class COActor extends Actor {
         return
       }
     }
+
+    const hasChoiceGroups = itemData.system.modifiers.some((m) => m.choiceGroup > 0)
+    if (hasChoiceGroups) {
+      const selectedIndices = await CoFeatureModifierChoiceDialog.choose(itemData.system.modifiers)
+      if (!selectedIndices) return
+      itemData.system.modifiers = selectedIndices.map((i) => itemData.system.modifiers[i])
+      itemData.system.modifiers.forEach((m) => (m.choiceGroup = 0))
+    }
+
     itemData = itemData instanceof Array ? itemData : [itemData]
     const newFeature = await this.createEmbeddedDocuments("Item", itemData)
 

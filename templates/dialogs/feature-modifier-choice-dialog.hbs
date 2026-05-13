@@ -1,0 +1,16 @@
+{{!log "Chroniques Oubliées | feature-modifier-choice-dialog" this}}
+<section class="feature-modifier-choice">
+    <p class="hint">{{localize "CO.dialogs.featureModifierChoice.hint"}}</p>
+    {{#each groups as |group groupKey|}}
+        <fieldset class="choice-group-fieldset">
+            <legend>{{group.label}}</legend>
+            {{#each group.options as |option optionIdx|}}
+                <label class="choice-option">
+                    <input type="radio" name="group-{{groupKey}}" value="{{option.index}}" {{#if (eq optionIdx 0)}}checked{{/if}} />
+                    <span class="option-value">{{option.value}}</span>
+                    <span class="option-target">{{option.targetLabel}}</span>
+                </label>
+            {{/each}}
+        </fieldset>
+    {{/each}}
+</section>

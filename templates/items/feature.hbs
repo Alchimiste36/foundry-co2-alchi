@@ -117,6 +117,13 @@
                     <div class="form-group">
                         <input name="system.modifiers.{{id}}.value" data-filter-type="{{#if m.allowsDiceFormula}}dice-formula{{else}}no-dice-formula{{/if}}" type="text" value="{{m.value}}" data-dtype="String" {{#if @root.locked}}readonly{{/if}}/>
                     </div>
+                    {{#if @root.isNotOwned}}
+                    <div class="form-group choice-group">
+                        <select name="system.modifiers.{{id}}.choiceGroup" data-type="Number" {{#if @root.locked}}class="disabled"{{/if}}>
+                            {{selectOptions @root.choiceModifierGroups selected=m.choiceGroup localize=true}}
+                        </select>
+                    </div>
+                    {{/if}}
                     <div class="form-group">
                         <label>{{localize "CO.ui.target"}}</label>
                         <select name="system.modifiers.{{id}}.apply" data-type="String" class="disabled" disabled>
