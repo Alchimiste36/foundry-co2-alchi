@@ -179,7 +179,7 @@ export default class CharacterData extends ActorData {
         },
       })
 
-      if (game.modules.get("cof-base")?.active) {
+      if (game.modules.get("cof2-base")?.active) {
         const items = await Promise.all(Object.values(game.system.CONST.BASE_ITEM_UUID).map((uuid) => fromUuid(uuid)))
         // The method updateSource will merge the arrays for embedded collections
         updates.items = items.map((i) => game.items.fromCompendium(i, { keepId: true, clearFolder: true }))

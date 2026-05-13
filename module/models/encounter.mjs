@@ -138,7 +138,7 @@ export default class EncounterData extends ActorData {
         },
       })
 
-      if (game.modules.get("cof-base")?.active) {
+      if (game.modules.get("cof2-base")?.active) {
         const items = []
         const item = await fromUuid(game.system.CONST.BASE_ITEM_UUID.hands)
         if (item) items.push(item)
