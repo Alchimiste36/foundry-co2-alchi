@@ -147,6 +147,11 @@ export const MODIFIERS_TARGET = Object.freeze({
     label: "CO.combat.long.dr",
     subtype: "combat",
   },
+  improvedDice: {
+    id: "improvedDice",
+    label: "CO.label.long.improvedDice",
+    subtype: "attribute",
+  },
   hp: {
     id: "hp",
     label: "CO.label.long.hp",
@@ -215,6 +220,11 @@ export const MODIFIERS_TARGET = Object.freeze({
   movemenAlterationImmunity: {
     id: "movemenAlterationImmunity",
     label: "CO.label.long.movemenAlterationImmunity",
+    subtype: "state",
+  },
+  bleedingImmunity: {
+    id: "bleedingImmunity",
+    label: "CO.label.long.bleedingImmunity",
     subtype: "state",
   },
 })

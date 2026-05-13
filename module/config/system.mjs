@@ -69,6 +69,7 @@ export const TOKEN_SIZE = {
 }
 
 export const DICES = { d4: "d4", d6: "d6", d8: "d8", d10: "d10", d12: "d12", d20: "d20" }
+export const EVOLVING_DICES = ["d4", "d6", "d8", "d10", "d12", "2d6"]
 export const RECOVERY_DICES = { d6: "d6", d8: "d8", d10: "d10" }
 export const PV = { 3: "3", 4: "4", 5: "5" }
 
@@ -102,6 +103,7 @@ export const SYSTEM = {
   CUSTOM_EFFECT: EFFECTS.CUSTOM_EFFECT,
   CUSTOM_EFFECT_ELEMENT: EFFECTS.CUSTOM_EFFECT_ELEMENT,
   DICES,
+  EVOLVING_DICES,
   ENCOUNTER_ARCHETYPES: ENCOUNTER.ARCHETYPES,
   ENCOUNTER_CATEGORIES: ENCOUNTER.CATEGORIES,
   ENCOUNTER_BOSS_RANKS: ENCOUNTER.BOSS_RANKS,

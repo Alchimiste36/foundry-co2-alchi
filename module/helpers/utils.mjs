@@ -299,12 +299,25 @@ export default class Utils {
    */
   static _replaceEvolvingDice(actor, content) {
     let result
+
     const level = actor.type === "character" ? actor.system.attributes.level : actor.system.attributes.nc
-    if (level < 6) result = content.replaceAll("d4°", "d4")
-    else if (level <= 8) result = content.replaceAll("d4°", "d6")
-    else if (level <= 11) result = content.replaceAll("d4°", "d8")
-    else if (level <= 14) result = content.replaceAll("d4°", "d10")
-    else result = content.replaceAll("d4°", "d12")
+
+    // 1. valeur de base par la règle
+    let curseur = 0
+    if (level >= 6) curseur = 1
+    if (level >= 9) curseur = 2
+    if (level >= 12) curseur = 3
+    if (level >= 15) curseur = 4
+
+    // 2. application des modificateurs collectés
+    let modif = actor.system.computeTotalModifiersByTarget(actor.system.attributeModifiers, SYSTEM.MODIFIERS_TARGET.improvedDice.id)
+    if (modif) {
+      curseur += modif.total
+      if (curseur > 5) curseur = 5
+      if (curseur < 0) curseur = 0
+    }
+
+    result = content.replaceAll("d4°", SYSTEM.EVOLVING_DICES[curseur])
     return result
   }
 
