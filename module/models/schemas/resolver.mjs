@@ -26,7 +26,7 @@ export class Resolver extends foundry.abstract.DataModel {
       dmg: new fields.ObjectField(),
       target: new fields.SchemaField({
         type: new fields.StringField({ required: true, choices: SYSTEM.RESOLVER_TARGET, initial: SYSTEM.RESOLVER_TARGET.none.id }),
-        number: new fields.NumberField({ required: true, nullable: false, integer: true, min: 0, initial: 0 }),
+        number: new fields.StringField({ required: true, nullable: false, initial: "0" }),
         scope: new fields.StringField({ required: true, choices: SYSTEM.RESOLVER_SCOPE, initial: SYSTEM.RESOLVER_SCOPE.all.id }),
       }),
       additionalEffect: new fields.SchemaField({
@@ -83,7 +83,7 @@ export class Resolver extends foundry.abstract.DataModel {
   hasOptionalTargets() {
     return (
       this.target.type === SYSTEM.RESOLVER_TARGET.none.id ||
-      (this.target.type === SYSTEM.RESOLVER_TARGET.single.id && this.target.number === 0)
+      (this.target.type === SYSTEM.RESOLVER_TARGET.single.id && (!this.target.number || this.target.number === "0"))
     )
   }
 
@@ -91,7 +91,19 @@ export class Resolver extends foundry.abstract.DataModel {
     return canvas.tokens?.placeables?.length ?? 999
   }
 
-  getResolverTargets(actor, actionName, { allowTargetDependentDifficulty = false, difficultyFormula = "" } = {}) {
+  getEvaluatedTargetNumber(actor, item) {
+    const formula = this.target.number
+    if (!formula || formula === "0") return 0
+    try {
+      const result = Utils.evaluateCoModifier(actor, formula, item?.uuid)
+      return Math.max(0, Math.floor(result))
+    } catch (e) {
+      console.warn(`CO2 | Unable to evaluate target number formula "${formula}":`, e)
+      return 0
+    }
+  }
+
+  getResolverTargets(actor, actionName, { allowTargetDependentDifficulty = false, difficultyFormula = "", item = null } = {}) {
     const hasOptionalTargets = this.hasOptionalTargets()
     const hasTargetDependentDifficulty =
       allowTargetDependentDifficulty && typeof difficultyFormula === "string" && (difficultyFormula.includes("@cible") || difficultyFormula.includes("@oppose"))
@@ -100,7 +112,8 @@ export class Resolver extends foundry.abstract.DataModel {
       return actor.acquireTargets(SYSTEM.RESOLVER_TARGET.multiple.id, SYSTEM.RESOLVER_SCOPE.all.id, this.getOptionalTargetCount(), actionName)
     }
 
-    return actor.acquireTargets(this.target.type, this.target.scope, this.target.number, actionName)
+    const evaluatedNumber = this.getEvaluatedTargetNumber(actor, item)
+    return actor.acquireTargets(this.target.type, this.target.scope, evaluatedNumber, actionName)
   }
 
   shouldWarnMissingTargets(targets) {
@@ -139,7 +152,7 @@ export class Resolver extends foundry.abstract.DataModel {
     const effectiveTargetType = hasOptionalTargets ? SYSTEM.RESOLVER_TARGET.none.id : this.target.type
 
     // Pour une action sans cible imposée, on autorise librement 0 à x cibles sélectionnées par l'utilisateur.
-    targets = this.getResolverTargets(actor, action.actionName, { allowTargetDependentDifficulty: true, difficultyFormula: this.skill.difficulty })
+    targets = this.getResolverTargets(actor, action.actionName, { allowTargetDependentDifficulty: true, difficultyFormula: this.skill.difficulty, item })
 
     if (this.shouldWarnMissingTargets(targets)) {
       ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
@@ -228,7 +241,7 @@ export class Resolver extends foundry.abstract.DataModel {
     // Gestion des dommages automatiques uniquement si la formule est définie
     if (this.dmg.formula && this.dmg.formula !== "" && this.dmg.formula !== "0") {
       // Gestion des cibles
-      const targets = this.getResolverTargets(actor, action.actionName)
+      const targets = this.getResolverTargets(actor, action.actionName, { item })
       if (this.shouldWarnMissingTargets(targets)) {
         ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
         return false
@@ -272,7 +285,7 @@ export class Resolver extends foundry.abstract.DataModel {
     let healFormulaEvaluated = Roll.replaceFormulaData(healFormula, actor.getRollData())
 
     // Gestion des cibles
-    const targets = this.getResolverTargets(actor, action.actionName)
+    const targets = this.getResolverTargets(actor, action.actionName, { item })
     if (this.shouldWarnMissingTargets(targets)) {
       ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
       return false
@@ -341,7 +354,7 @@ export class Resolver extends foundry.abstract.DataModel {
     // Gestion des cibles — pour une sauvegarde, "aucune cible" ou "cible unique optionnelle" est traitée comme "cible unique"
     let targets
     let effectiveTargetType
-    if (this.target.type === SYSTEM.RESOLVER_TARGET.none.id || (this.target.type === SYSTEM.RESOLVER_TARGET.single.id && this.target.number === 0)) {
+    if (this.hasOptionalTargets()) {
       effectiveTargetType = SYSTEM.RESOLVER_TARGET.single.id
       targets = actor.acquireTargets(effectiveTargetType, this.target.scope, 1, action.actionName)
       if (targets.length === 0) {
@@ -350,7 +363,7 @@ export class Resolver extends foundry.abstract.DataModel {
       }
     } else {
       effectiveTargetType = this.target.type
-      targets = this.getResolverTargets(actor, action.actionName)
+      targets = this.getResolverTargets(actor, action.actionName, { item })
       if (this.shouldWarnMissingTargets(targets)) {
         ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
         return false
@@ -465,7 +478,7 @@ export class Resolver extends foundry.abstract.DataModel {
       } else {
         let targetType = this.target.type
         if (this.target.type === SYSTEM.RESOLVER_TARGET.none.id) targetType = SYSTEM.RESOLVER_TARGET.single.id
-        targets = actor.acquireTargets(targetType, this.target.scope, this.target.number, action.name)
+        targets = actor.acquireTargets(targetType, this.target.scope, this.getEvaluatedTargetNumber(actor, item), action.name)
       }
       const uuidList = targets.map((t) => t.uuid)
 
