@@ -442,7 +442,11 @@ export default class CharacterData extends ActorData {
 
       this.attributes.hp.max = this.attributes.hp.base + constitutionBonus + hpMaxBonuses + hpMaxModifiers.total
 
-      this.attributes.hp.tooltip = tooltipBase.concat(Utils.getTooltip(Utils.getAbilityName("con"), constitutionBonus), hpMaxModifiers.tooltip, Utils.getTooltip("Bonus", hpMaxBonuses))
+      this.attributes.hp.tooltip = tooltipBase.concat(
+        Utils.getTooltip(Utils.getAbilityName("con"), constitutionBonus),
+        hpMaxModifiers.tooltip,
+        Utils.getTooltip("Bonus", hpMaxBonuses),
+      )
     }
 
     if (this.attributes.hp.value > this.attributes.hp.max) this.attributes.hp.value = this.attributes.hp.max // On ne depasse pas le max

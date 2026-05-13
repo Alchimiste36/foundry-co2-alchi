@@ -444,6 +444,8 @@
         "diseaseImmunity": "Immunisé aux maladies",
         "enslavementImmunity": "Immunisé à l'asservissement",
         "movemenAlterationImmunity": "Immunisé aux altérations de mouvement",
+        "bleedingImmunity": "Immunisé au saignement",
+        "improvedDice": "Dé évolutif",
         "sendToChat": "Envoyer sur le chat",
         "edit": "Éditer",
         "editItem": "Éditer l'objet",

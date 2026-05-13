@@ -681,6 +681,18 @@ export default class COActor extends Actor {
       }
     }
 
+    // Imunisé au saignement ?
+    if (effectid === "bleeding" && state) {
+      if (this.system.modifiers) {
+        const state = this.system.modifiers.filter((m) => m.target === SYSTEM.MODIFIERS_TARGET.bleedingImmunity.id)
+        if (state && state.length > 0) {
+          // Immunisé on ne l'applique pas
+          ui.notifications.info(`${this.name} ${game.i18n.localize("CO.label.long.bleedingImmunity")}`)
+          return false
+        }
+      }
+    }
+
     let hasEffect = this.statuses.has(effectid)
     if (hasEffect && !state) return await this.toggleStatusEffect(effectid, state)
     if (!hasEffect && state) return await this.toggleStatusEffect(effectid, state)
