@@ -299,7 +299,7 @@ export default class Utils {
    */
   static _replaceEvolvingDice(actor, content) {
     let result
-    const TIERS = ["d4", "d6", "d8", "d10", "d12", "2d6"]
+
     const level = actor.type === "character" ? actor.system.attributes.level : actor.system.attributes.nc
 
     // 1. valeur de base par la règle
@@ -309,8 +309,6 @@ export default class Utils {
     if (level >= 12) curseur = 3
     if (level >= 15) curseur = 4
 
-    console.log("curseur avant modifier", curseur)
-    console.log("attributeModifiers", actor.system.attributeModifiers)
     // 2. application des modificateurs collectés
     let modif = actor.system.computeTotalModifiersByTarget(actor.system.attributeModifiers, SYSTEM.MODIFIERS_TARGET.improvedDice.id)
     if (modif) {
@@ -319,9 +317,7 @@ export default class Utils {
       if (curseur < 0) curseur = 0
     }
 
-    console.log("curseur apres modifier", curseur, "modifier : ", modif)
-
-    result = content.replaceAll("d4°", TIERS[curseur])
+    result = content.replaceAll("d4°", SYSTEM.EVOLVINGDICE[curseur])
     return result
   }
 

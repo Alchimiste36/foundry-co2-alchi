@@ -5,10 +5,6 @@
 - Ajoute l'immunité au saignement des Ames forgées
 - Ajoute le modifier 'improvedDice' (Adaptation du dé évolutif) qui permet de gérer le cas de la capacité d'apprentissage des demi-elfes : prendre le dé au dessus lors de la convertion des dés évolutifs. Ce modifier est plus flexible il permet d'augmenter ou de dimunuer de x cran le dé dans le tableau du livre des règles auquel on a ajouter l'option 2d6.
 
-## Corrections
-
-- Corrige la génération automatique de l'item "mains nue" et de l'action "soutenir" sur le nouvelles fiches de personnage qui ne fonctionnaient plus.
-
 # 2.1.3
 
 ## Corrections
