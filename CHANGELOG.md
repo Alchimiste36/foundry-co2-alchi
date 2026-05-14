@@ -2,8 +2,14 @@
 
 ## Améliorations
 
-- Ajoute l'immunité au saignement des Ames forgées
-- Ajoute le modifier 'improvedDice' (Adaptation du dé évolutif) qui permet de gérer le cas de la capacité d'apprentissage des demi-elfes : prendre le dé au dessus lors de la convertion des dés évolutifs. Ce modifier est plus flexible il permet d'augmenter ou de dimunuer de x cran le dé dans le tableau du livre des règles auquel on a ajouter l'option 2d6.
+- Ajoute l'immunité au saignement
+- Ajoute le modifier 'improvedDice' (Adaptation du dé évolutif). Améliore la gestion du dé évolutif : il est possible d'augmenter ou de diminuer de x crans le dé dans le tableau du livre des règles. On ajoute de plus l'option 2d6
+- Prise en compte des dés bonus/malus dans les jets opposés
+- Profil et Trait : pour les modificateurs, il est maintenant possible de grouper par choix pour gérer le cas où il faut choisir entre 2 caractéristiques
+- Résolution, dans le champ nombre de cibles : possibilité d'utiliser les raccourcis, par exemple @cha au lieu d'un entier. Le résultat du calcul s'affiche en infobulle sur un item possédé par un personnage
+
+## Corrections
+- La création automatique de Mains nues et Support pour un nouveau personnage est de nouveau fonctionnel
 
 # 2.1.3
 

@@ -101,7 +101,7 @@
           {{selectOptions @root.choiceResolverTargets selected=r.target.type localize=true}}
         </select>
         {{#if (eq r.target.type "multiple")}}
-          <input class="center-input" name="system.actions.{{idx}}.resolvers.{{id}}.target.number" type="text" value="{{r.target.number}}" data-dtype="String" data-tooltip={{localize "CO.resolver.target.number"}} {{#if @root.locked}}readonly{{/if}}>
+          <input class="center-input" name="system.actions.{{idx}}.resolvers.{{id}}.target.number" type="text" value="{{r.target.number}}" data-dtype="String" data-tooltip="{{#if (lookup @root.evaluatedTargetNumbers (concat idx '-' id))}}{{lookup @root.evaluatedTargetNumbers (concat idx '-' id)}}{{else}}{{localize 'CO.resolver.target.number'}}{{/if}}" {{#if @root.locked}}readonly{{/if}}>
         {{/if}}
         {{#if (or (eq r.target.type "single") (eq r.target.type "multiple"))}}
           <select name="system.actions.{{idx}}.resolvers.{{id}}.target.scope" data-type="String" data-tooltip={{localize "CO.resolver.scope.title"}} {{#if @root.locked}}class="disabled"{{/if}}>

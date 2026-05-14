@@ -221,6 +221,18 @@ export default class COBaseItemSheet extends HandlebarsApplicationMixin(sheets.I
       Object.entries(SYSTEM.MODIFIERS.MODIFIERS_TARGET).filter(([key, value]) => value.id !== "all" && (value.subtype === "ability" || value.subtype === "attack")),
     )
 
+    context.evaluatedTargetNumbers = {}
+    if (this.document.isOwned && this.document.system.actions) {
+      const actor = this.document.actor
+      for (const [actionIdx, action] of this.document.system.actions.entries()) {
+        for (const [resolverId, resolver] of action.resolvers.entries()) {
+          if (resolver.target.type === "multiple" && resolver.target.number && resolver.target.number !== "0") {
+            context.evaluatedTargetNumbers[`${actionIdx}-${resolverId}`] = resolver.getEvaluatedTargetNumber(actor, this.document).toString()
+          }
+        }
+      }
+    }
+
     if (CONFIG.debug.co2?.sheets) console.debug(Utils.log(`CoBaseItemSheet - context`), context)
     return context
   }
