@@ -25,6 +25,14 @@
           top: 8px;
         }
       }
+      input[type="checkbox"] {
+        &::before {
+          color: var(--color-fieldset-border);
+        }
+      }
+      input[type="checkbox"]:checked::before {
+        color: var(--checkbox-checkmark-color);
+      }
     }
 
     .ability-mod {
