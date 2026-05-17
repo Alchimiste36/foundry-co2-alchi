@@ -2821,6 +2821,12 @@ co-toggle-switch[checked] thumb {
 .co.application.sheet.actor .window-content .abilities .ability .ability-id input[type="checkbox"]::before {
   top: 8px;
 }
+.co.application.sheet.actor .window-content .abilities .ability .ability-id input[type="checkbox"]::before {
+  color: var(--color-fieldset-border);
+}
+.co.application.sheet.actor .window-content .abilities .ability .ability-id input[type="checkbox"]:checked::before {
+  color: var(--checkbox-checkmark-color);
+}
 .co.application.sheet.actor .window-content .abilities .ability .ability-mod {
   border: 2px solid var(--color-abilities);
   border-radius: 0;
