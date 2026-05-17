@@ -9,7 +9,13 @@
 - Résolution, dans le champ nombre de cibles : possibilité d'utiliser les raccourcis, par exemple @cha au lieu d'un entier. Le résultat du calcul s'affiche en infobulle sur un item possédé par un personnage
 
 ## Corrections
+
 - La création automatique de Mains nues et Support pour un nouveau personnage est de nouveau fonctionnel
+- Résolution Soin : lorsqu'une cible ne correspond pas au type attendu (allié/ennemi), un avertissement est affiché et l'action est bloquée (au lieu d'appliquer silencieusement le soin aux seules cibles valides ou de ne rien faire sans feedback)
+- Résolution Attaque : lorsqu'aucune cible valide n'est sélectionnée (toutes filtrées par le type allié/ennemi), un avertissement est affiché
+- Résolution Attaque, Cible Unique : les cibles hors type (allié/ennemi) sont correctement affichées grisées avec bordure rouge dans la fenêtre de dialogue, y compris pour les jets opposés
+- Résolution Attaque, Cible Unique : si plusieurs cibles sont sélectionnées, un avertissement bloque l'action au lieu d'afficher toutes les cibles dans le dialogue
+- Filtrage des cibles : les tokens de disposition Neutre et Secret sont acceptés par les deux types de cibles (alliés et ennemis)
 
 # 2.1.3
 

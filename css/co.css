@@ -1121,6 +1121,13 @@ co-toggle-switch[checked] thumb {
   align-items: center;
   gap: 4px;
 }
+.co.application.dialog.attack-roll .window-content .target.invalid-scope {
+  opacity: 0.5;
+}
+.co.application.dialog.attack-roll .window-content .target.invalid-scope .actor-image {
+  border: 2px solid red;
+  border-radius: 4px;
+}
 .co.application.dialog.attack-roll .window-content .target-preview-difficulty {
   min-width: 28px;
   padding: 2px 5px;

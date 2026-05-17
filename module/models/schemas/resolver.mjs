@@ -116,8 +116,18 @@ export class Resolver extends foundry.abstract.DataModel {
     return actor.acquireTargets(this.target.type, this.target.scope, evaluatedNumber, actionName)
   }
 
-  shouldWarnMissingTargets(targets) {
-    return !this.hasOptionalTargets() && targets.length === 0 && (this.target.type === SYSTEM.RESOLVER_TARGET.single.id || this.target.type === SYSTEM.RESOLVER_TARGET.multiple.id)
+  shouldBlockMissingTargets(targets) {
+    if (targets.length > 0) return false
+    if (!canvas.ready) return false
+    if (!this.hasOptionalTargets() && (this.target.type === SYSTEM.RESOLVER_TARGET.single.id || this.target.type === SYSTEM.RESOLVER_TARGET.multiple.id)) {
+      if (game.user.targets.size === 0) {
+        ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
+      } else {
+        ui.notifications.warn(game.i18n.localize("CO.notif.warningNoValidTarget"))
+      }
+      return true
+    }
+    return false
   }
 
   /**
@@ -149,15 +159,25 @@ export class Resolver extends foundry.abstract.DataModel {
     // Gestion des cibles
     let targets = []
     const hasOptionalTargets = this.hasOptionalTargets()
-    const effectiveTargetType = hasOptionalTargets ? SYSTEM.RESOLVER_TARGET.none.id : this.target.type
 
     // Pour une action sans cible imposée, on autorise librement 0 à x cibles sélectionnées par l'utilisateur.
     targets = this.getResolverTargets(actor, action.actionName, { allowTargetDependentDifficulty: true, difficultyFormula: this.skill.difficulty, item })
 
-    if (this.shouldWarnMissingTargets(targets)) {
-      ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
+    if (this.shouldBlockMissingTargets(targets)) {
       return false
     }
+
+    if (this.target.type === SYSTEM.RESOLVER_TARGET.single.id && targets.length > 1) {
+      ui.notifications.warn(game.i18n.format("CO.notif.warningIncorrectTargets", { number: 1, action: action.actionName }))
+      return false
+    }
+
+    if (this.target.type !== SYSTEM.RESOLVER_TARGET.none.id && hasOptionalTargets && targets.length === 0 && canvas.ready && game.user.targets.size > 0) {
+      ui.notifications.warn(game.i18n.localize("CO.notif.warningNoValidTarget"))
+      return false
+    }
+
+    const effectiveTargetType = hasOptionalTargets ? (targets.length > 0 ? SYSTEM.RESOLVER_TARGET.single.id : SYSTEM.RESOLVER_TARGET.none.id) : this.target.type
 
     if (CONFIG.debug.co2?.resolvers) console.debug(Utils.log("Resolver attack - Targets", targets))
 
@@ -180,6 +200,7 @@ export class Resolver extends foundry.abstract.DataModel {
       hasAttackSuccessThreshold: this.hasAttackSuccessThreshold,
       attackSuccessThreshold: this.attackSuccessThreshold,
       targetType: effectiveTargetType,
+      targetScope: this.target.scope,
       targets: targets,
     })
     if (!attack) return false
@@ -242,8 +263,12 @@ export class Resolver extends foundry.abstract.DataModel {
     if (this.dmg.formula && this.dmg.formula !== "" && this.dmg.formula !== "0") {
       // Gestion des cibles
       const targets = this.getResolverTargets(actor, action.actionName, { item })
-      if (this.shouldWarnMissingTargets(targets)) {
-        ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
+      if (this.shouldBlockMissingTargets(targets)) {
+        return false
+      }
+
+      if (this.target.type !== SYSTEM.RESOLVER_TARGET.none.id && this.hasOptionalTargets() && targets.length === 0 && canvas.ready && game.user.targets.size > 0) {
+        ui.notifications.warn(game.i18n.localize("CO.notif.warningNoValidTarget"))
         return false
       }
 
@@ -257,7 +282,8 @@ export class Resolver extends foundry.abstract.DataModel {
         damageFormulaTooltip,
         bonusDice: this.bonusDiceAdd === true ? 1 : 0,
         malusDice: this.malusDiceAdd === true ? 1 : 0,
-        targetType: this.hasOptionalTargets() ? SYSTEM.RESOLVER_TARGET.none.id : this.target.type,
+        targetType: this.hasOptionalTargets() ? (targets.length > 0 ? SYSTEM.RESOLVER_TARGET.single.id : SYSTEM.RESOLVER_TARGET.none.id) : this.target.type,
+        targetScope: this.target.scope,
         targets: targets,
       })
       if (!attack) return false
@@ -286,8 +312,17 @@ export class Resolver extends foundry.abstract.DataModel {
 
     // Gestion des cibles
     const targets = this.getResolverTargets(actor, action.actionName, { item })
-    if (this.shouldWarnMissingTargets(targets)) {
-      ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
+    if (this.shouldBlockMissingTargets(targets)) {
+      return false
+    }
+
+    if (canvas.ready && this.target.scope !== SYSTEM.RESOLVER_SCOPE.all.id && targets.length > 0 && game.user.targets.size > targets.length) {
+      ui.notifications.warn(game.i18n.localize("CO.notif.warningInvalidScopeTargets"))
+      return false
+    }
+
+    if (this.target.type !== SYSTEM.RESOLVER_TARGET.none.id && this.hasOptionalTargets() && targets.length === 0 && canvas.ready && game.user.targets.size > 0) {
+      ui.notifications.warn(game.i18n.localize("CO.notif.warningNoValidTarget"))
       return false
     }
 
@@ -296,7 +331,7 @@ export class Resolver extends foundry.abstract.DataModel {
     const heal = await actor.rollHeal(item, {
       actionName: action.label,
       healFormula: healFormulaEvaluated,
-      targetType: this.hasOptionalTargets() ? SYSTEM.RESOLVER_TARGET.none.id : this.target.type,
+      targetType: this.hasOptionalTargets() ? (targets.length > 0 ? SYSTEM.RESOLVER_TARGET.single.id : SYSTEM.RESOLVER_TARGET.none.id) : this.target.type,
       targets: targets,
     })
     if (!heal) return false
@@ -364,8 +399,7 @@ export class Resolver extends foundry.abstract.DataModel {
     } else {
       effectiveTargetType = this.target.type
       targets = this.getResolverTargets(actor, action.actionName, { item })
-      if (this.shouldWarnMissingTargets(targets)) {
-        ui.notifications.warn(game.i18n.localize("CO.notif.warningNoTargetOrTooManyTargets"))
+      if (this.shouldBlockMissingTargets(targets)) {
         return false
       }
     }
@@ -480,6 +514,12 @@ export class Resolver extends foundry.abstract.DataModel {
         if (this.target.type === SYSTEM.RESOLVER_TARGET.none.id) targetType = SYSTEM.RESOLVER_TARGET.single.id
         targets = actor.acquireTargets(targetType, this.target.scope, this.getEvaluatedTargetNumber(actor, item), action.name)
       }
+
+      if (targets.length === 0) {
+        ui.notifications.warn(game.i18n.localize("CO.notif.warningNoValidTarget"))
+        return false
+      }
+
       const uuidList = targets.map((t) => t.uuid)
 
       // Créer l'effet pour les autres

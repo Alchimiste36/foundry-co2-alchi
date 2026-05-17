@@ -392,6 +392,8 @@
       "attackActionLimit": "Une attaque de créature ne peut avoir qu'une seule action",
       "warningOnlyOneTarget": "Vous ne pouvez désigner qu'une cible pour l'action !",
       "warningNoTargetOrTooManyTargets": "Vous n'avez ciblé personne ou trop de cibles pour cette action !",
+      "warningNoValidTarget": "Aucune cible valide pour cette action",
+      "warningInvalidScopeTargets": "Certaines cibles sélectionnées ne sont pas valides pour cette action",
       "applyEffect": "{actorName} : application de {skillName} sur {targetNames}"
     },
     "tooltip": {

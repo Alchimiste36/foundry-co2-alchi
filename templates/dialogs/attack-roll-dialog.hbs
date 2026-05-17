@@ -168,12 +168,12 @@
         <legend>{{localize "CO.ui.attackTarget"}}</legend>
         <div class="targets center">
             {{#each targets as |target id|}}
-            <div class="target">
+            <div class="target {{#if invalidScope}}invalid-scope{{/if}}">
                 <img class="actor-image" src="{{token.document.texture.src}}" data-tooltip="{{target.name}}" height="50px" width="50px" data-id="{{actor.id}}" data-uuid="{{uuid}}"/>
                 {{#if previewDifficulty}}
                     <div class="target-preview-difficulty">{{previewDifficulty}}</div>
                 {{/if}}
-            </div> 
+            </div>
             {{/each}}
         </div>
     </fieldset>

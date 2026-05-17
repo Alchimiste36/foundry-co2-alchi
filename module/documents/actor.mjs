@@ -1009,9 +1009,7 @@ export default class COActor extends Actor {
 
     switch (targetType) {
       case "none":
-        break
       case "self":
-        targets = this._getTargets(actionName, targetScope, 1, true)
         break
       case "single":
         targets = this._getTargets(actionName, targetScope, 1, true)
@@ -1865,6 +1863,7 @@ export default class COActor extends Actor {
       damageFormula = undefined,
       damageFormulaTooltip = "",
       targetType = SYSTEM.RESOLVER_TARGET.none.id,
+      targetScope = SYSTEM.RESOLVER_SCOPE.all.id,
       targets = undefined,
       customEffect,
       additionalEffect,
@@ -2112,13 +2111,32 @@ export default class COActor extends Actor {
     let opposeResult = ""
     let opposeTooltip = ""
 
-    let dialogTargets = targets
+    let dialogTargets = targets ? [...targets] : []
     if (type === "attack" && targets?.length > 0 && useDifficulty && showDifficulty) {
       const targetDifficultyPreview = Utils.computeTargetResults(targets, difficultyTooltip, 0, {})
       dialogTargets = targets.map((target, index) => ({
         ...target,
         previewDifficulty: targetDifficultyPreview[index]?.difficulty ?? null,
       }))
+    }
+
+    if (targetScope && targetScope !== SYSTEM.RESOLVER_SCOPE.all.id && canvas.ready) {
+      const scopeDisposition =
+        targetScope === SYSTEM.RESOLVER_SCOPE.allies.id ? CONST.TOKEN_DISPOSITIONS.FRIENDLY : CONST.TOKEN_DISPOSITIONS.HOSTILE
+      dialogTargets = dialogTargets.map((target) => {
+        const d = target.token?.document?.disposition
+        const isNeutralOrSecret = d === CONST.TOKEN_DISPOSITIONS.NEUTRAL || d === CONST.TOKEN_DISPOSITIONS.SECRET
+        if (!isNeutralOrSecret && d !== scopeDisposition) {
+          return { ...target, invalidScope: true }
+        }
+        return target
+      })
+      const existingUuids = new Set(dialogTargets.map((t) => t.uuid))
+      for (const token of game.user.targets) {
+        if (token.actor && !existingUuids.has(token.actor.uuid)) {
+          dialogTargets.push({ ...this._getTargetFromToken(token), invalidScope: true })
+        }
+      }
     }
 
     // Gestion des skillBonuses pour les attaques basées sur une caractéristique
@@ -2681,27 +2699,27 @@ export default class COActor extends Actor {
       return []
     }
 
-    // Validation du nombre de cibles (number=0 pour multiple = illimité)
+    // Filtrage des cibles selon la portée
+    for (const token of tokens) {
+      const disposition = token.document.disposition
+      const isNeutralOrSecret = disposition === CONST.TOKEN_DISPOSITIONS.NEUTRAL || disposition === CONST.TOKEN_DISPOSITIONS.SECRET
+      const isValidTarget =
+        scope === "all" || isNeutralOrSecret || (scope === "allies" && disposition === CONST.TOKEN_DISPOSITIONS.FRIENDLY) || (scope === "enemies" && disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE)
+
+      if (isValidTarget) {
+        targets.push(this._getTargetFromToken(token))
+      }
+    }
+
+    // Validation du nombre de cibles après filtrage scope (number=0 pour multiple = illimité)
     const expectedNumber = single ? 1 : number
-    if (expectedNumber > 0 && tokens.size > expectedNumber) {
+    if (expectedNumber > 0 && targets.length > expectedNumber) {
       const error = game.i18n.format("CO.notif.warningIncorrectTargets", {
         number: expectedNumber,
         action: actionName,
       })
       ui.notifications.warn(error)
       return []
-    }
-
-    // Filtrage des cibles selon la portée
-    for (const token of tokens) {
-      // Vérification de la disposition selon la portée
-      const disposition = token.document.disposition
-      const isValidTarget =
-        scope === "all" || (scope === "allies" && disposition === CONST.TOKEN_DISPOSITIONS.FRIENDLY) || (scope === "enemies" && disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE)
-
-      if (isValidTarget) {
-        targets.push(this._getTargetFromToken(token))
-      }
     }
 
     return targets

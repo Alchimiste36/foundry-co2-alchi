@@ -205,6 +205,15 @@
       flex-direction: column;
       align-items: center;
       gap: 4px;
+
+      &.invalid-scope {
+        opacity: 0.5;
+
+        .actor-image {
+          border: 2px solid red;
+          border-radius: 4px;
+        }
+      }
     }
 
     .target-preview-difficulty {
